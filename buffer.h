@@ -1,4 +1,5 @@
-#pragma once
+#ifndef _BUFFER_H
+#define _BUFFER_H
 
 struct append_buffer {
 	char* buffer;
@@ -9,3 +10,5 @@ struct append_buffer {
 
 void ab_append(struct append_buffer* ab, const char* string, int length);
 void ab_free(struct append_buffer* ab);
+
+#endif

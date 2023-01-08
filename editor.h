@@ -1,4 +1,5 @@
-#pragma once
+#ifndef _EDITOR_H
+#define _EDITOR_H
 
 #include <time.h>
 #include "buffer.h"
@@ -33,3 +34,5 @@ void editor_scroll(struct editor_state* editor);
 void editor_draw_rows(struct editor_state* editor, struct append_buffer* buffer);
 void editor_draw_status_bar(struct editor_state* editor, struct append_buffer* buffer);
 void editor_draw_message_bar(struct editor_state* editor, struct append_buffer* buffer);
+
+#endif

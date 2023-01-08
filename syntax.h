@@ -1,4 +1,5 @@
-#pragma once
+#ifndef _SYNTAX_H
+#define _SYNTAX_H
 
 #include <stdlib.h>
 
@@ -34,3 +35,5 @@ enum editor_highlight {
 void editor_update_syntax(struct editor_state* editor, struct editor_row* row);
 int editor_syntax_to_colour(int highlight);
 void editor_select_syntax_highlight(struct editor_state* editor);
+
+#endif

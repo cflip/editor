@@ -1,4 +1,5 @@
-#pragma once
+#ifndef _INPUT_H
+#define _INPUT_H
 
 #include "editor.h"
 
@@ -20,3 +21,5 @@ enum editor_key {
 int editor_read_key();
 void editor_move_cursor(struct editor_state* editor, int key);
 void editor_process_keypress(struct editor_state* editor);
+
+#endif

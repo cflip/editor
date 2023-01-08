@@ -1,4 +1,5 @@
-#pragma once
+#ifndef _ROW_H
+#define _ROW_H
 
 #include <ctype.h>
 
@@ -25,3 +26,5 @@ void delete_row(struct editor_state* editor, int at);
 void row_insert_char(struct editor_state* editor, struct editor_row* row, int at, int c);
 void row_append_string(struct editor_state* editor, struct editor_row* row, char* string, size_t length);
 void row_delete_char(struct editor_state* editor, struct editor_row* row, int at);
+
+#endif
