@@ -49,6 +49,9 @@ BDFFontInfo font_load(const char *filename)
 	result.bounds.h = 0;
 	result.chars = NULL;
 	result.num_chars = 0;
+	for (int i = 0; i < 128; i++) {
+		result.char_index_for_code_point[i] = 0;
+	}
 
 	fp = fopen(filename, "r");
 	if (fp == NULL) {
