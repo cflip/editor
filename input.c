@@ -97,10 +97,9 @@ void editor_move_cursor(struct editor_state* editor, int key)
 		editor->cursor_x = row_length;
 }
 
-void editor_process_keypress(struct editor_state* editor)
+void editor_process_keypress(struct editor_state* editor, int c)
 {
 	static int quit_message = 1;
-	int c = editor_read_key();
 
 	switch (c) {
 		case '\r':
@@ -112,8 +111,6 @@ void editor_process_keypress(struct editor_state* editor)
 				quit_message = 0;
 				return;
 			}
-			write(STDOUT_FILENO, "\x1b[2J", 4);
-			write(STDOUT_FILENO, "\x1b[H", 3);
 			exit(0);
 			break;
 		case CTRL_KEY('s'):

@@ -5,6 +5,7 @@
 #include "buffer.h"
 #include "editor.h"
 #include "font.h"
+#include "input.h"
 
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
@@ -39,13 +40,52 @@ void window_init()
 	SDL_ShowWindow(window);
 }
 
-int window_handle_event()
+int window_handle_event(struct editor_state *editor)
 {
 	static SDL_Event e;
 	SDL_WaitEvent(&e);
 	switch (e.type) {
 	case SDL_QUIT:
 		return 0;
+	case SDL_KEYDOWN:
+		int keycode = e.key.keysym.sym;
+		switch (e.key.keysym.sym) {
+		case SDLK_BACKSPACE:
+			keycode = BACKSPACE;
+			break;
+		case SDLK_LEFT:
+			keycode = ARROW_LEFT;
+			break;
+		case SDLK_RIGHT:
+			keycode = ARROW_RIGHT;
+			break;
+		case SDLK_UP:
+			keycode = ARROW_UP;
+			break;
+		case SDLK_DOWN:
+			keycode = ARROW_DOWN;
+			break;
+		case SDLK_DELETE:
+			keycode = DELETE_KEY;
+			break;
+		case SDLK_HOME:
+			keycode = HOME_KEY;
+			break;
+		case SDLK_END:
+			keycode = END_KEY;
+			break;
+		case SDLK_PAGEUP:
+			keycode = PAGE_UP;
+			break;
+		case SDLK_PAGEDOWN:
+			keycode = PAGE_DOWN;
+			break;
+		}
+		if (e.key.keysym.mod & KMOD_CTRL) {
+			keycode = CTRL_KEY(keycode);
+		}
+		editor_process_keypress(editor, keycode);
+		break;
 	}
 	return 1;
 }

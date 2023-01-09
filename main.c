@@ -16,7 +16,7 @@ int main(int argc, char** argv)
 
 	editor_set_status_message(&editor, "HELP: Ctrl+Q = quit, Ctrl+S = save, Ctrl+F = find");
 
-	while (window_handle_event()) {
+	while (window_handle_event(&editor)) {
 		window_redraw(&editor);
 		// editor_refresh_screen(&editor);
 		// editor_process_keypress(&editor);
