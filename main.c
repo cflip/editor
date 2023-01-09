@@ -1,11 +1,11 @@
 #include "input.h"
 #include "file.h"
 #include "editor.h"
-#include "terminal.h"
+#include "window.h"
 
 int main(int argc, char** argv)
 {
-	enable_raw_mode();
+	window_init();
 
 	struct editor_state editor;
 	init_editor(&editor);
@@ -16,10 +16,12 @@ int main(int argc, char** argv)
 
 	editor_set_status_message(&editor, "HELP: Ctrl+Q = quit, Ctrl+S = save, Ctrl+F = find");
 
-	while (1) {
-		editor_refresh_screen(&editor);
-		editor_process_keypress(&editor);
+	while (window_handle_event()) {
+		window_redraw(&editor);
+		// editor_refresh_screen(&editor);
+		// editor_process_keypress(&editor);
 	}
 	
+	window_destroy();
 	return 0;
 }
