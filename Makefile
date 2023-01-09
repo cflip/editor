@@ -1,4 +1,4 @@
-CFLAGS=-std=c99
+CFLAGS=-std=c99 -g
 LFLAGS=-lSDL2
 
 OUT=editor
