@@ -1,17 +1,27 @@
-CFLAGS=-std=c99 -g
+CFLAGS=-std=c99 -g -Wall
 LFLAGS=-lSDL2
 
 OUT=editor
-SRC=main.c     \
-	buffer.c   \
-	editor.c   \
-	file.c     \
-	font.c     \
-	input.c    \
-	row.c      \
-	syntax.c   \
-	terminal.c \
-	window.c
+OBJS=main.o     \
+     buffer.o   \
+     editor.o   \
+     file.o     \
+     font.o     \
+     input.o    \
+     row.o      \
+     syntax.o   \
+     terminal.o \
+     window.o
 
-${OUT}: ${SRC}
-	${CC} ${CFLAGS} ${LFLAGS} ${SRC} -o ${OUT}
+.PHONY: all clean
+
+all: $(OUT)
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+${OUT}: $(OBJS)
+	$(CC) $(LFLAGS) $^ -o $@
+
+clean:
+	rm -f $(OBJS) $(OUT)
