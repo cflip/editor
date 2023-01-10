@@ -11,7 +11,7 @@ static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
 static SDL_Texture *font_texture = NULL;
 
-static BDFFontInfo font;
+static PSFFont font;
 
 void window_init()
 {
@@ -34,7 +34,7 @@ void window_init()
 		return;
 	}
 
-	font = font_load("ter-u12n.bdf");
+	font = font_load("terminus/ter-u12n.psf");
 	font_texture = font_create_texture(renderer, &font);
 
 	SDL_ShowWindow(window);
@@ -93,6 +93,8 @@ int window_handle_event(struct editor_state *editor)
 static void draw_font_text(struct append_buffer *buffer)
 {
 	SDL_Rect dstrect = { 0, 0, 0, 0 };
+	SDL_Rect srcrect = { 0, 0, 0, 0 };
+
 	for (int i = 0; i < buffer->length; i++) {
 		const char letter = buffer->buffer[i];
 		if (letter > 128) {
@@ -100,23 +102,20 @@ static void draw_font_text(struct append_buffer *buffer)
 			continue;
 		}
 
-		const int char_index = font.char_index_for_code_point[letter];
-		BDFFontChar *glyph = &font.chars[char_index];
-		if (glyph == NULL) {
-			fprintf(stderr, "Font doesn't have character %c", letter);
-			continue;
-		}
+		dstrect.w = font.width;
+		dstrect.h = font.height;
 
-		dstrect.w = glyph->bounds.w;
-		dstrect.h = glyph->bounds.h;
-		SDL_RenderCopy(renderer, font_texture, &glyph->bounds, &dstrect);
+		srcrect.x = letter * 8;
+		srcrect.y = 0;
+		srcrect.w = font.width;
+		srcrect.h = font.height;
+		SDL_RenderCopy(renderer, font_texture, &srcrect, &dstrect);
 
 		if (letter == '\n') {
 			dstrect.x = 0;
-			dstrect.y += font.bounds.h;
+			dstrect.y += font.height;
 		} else {
-			dstrect.x += glyph->next_glyph_offset.x;
-			dstrect.y += glyph->next_glyph_offset.y;
+			dstrect.x += font.width;
 		}
 	}
 }
