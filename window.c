@@ -97,11 +97,17 @@ static void draw_font_text(struct append_buffer *buffer)
 
 	for (int i = 0; i < buffer->length; i++) {
 		const char letter = buffer->buffer[i];
+
 		if (letter == ' ') {
 			dstrect.x += font.width;
 			continue;
 		}
 
+		if (letter == '\n') {
+			dstrect.x = 0;
+			dstrect.y += font.height;
+			continue;
+		}
 
 		int glyph_index = letter;
 		if (font.unicode_desc != NULL) {
@@ -117,12 +123,7 @@ static void draw_font_text(struct append_buffer *buffer)
 		srcrect.h = font.height;
 		SDL_RenderCopy(renderer, font_texture, &srcrect, &dstrect);
 
-		if (letter == '\n') {
-			dstrect.x = 0;
-			dstrect.y += font.height;
-		} else {
-			dstrect.x += font.width;
-		}
+		dstrect.x += font.width;
 	}
 }
 
