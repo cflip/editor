@@ -4,6 +4,7 @@
 
 #include "buffer.h"
 #include "editor.h"
+#include "error.h"
 #include "font.h"
 #include "input.h"
 
@@ -15,27 +16,20 @@ static PSFFont font;
 
 void window_init(const char *title, int rows, int cols)
 {
-	/* TODO: There should be a 'panic' method of sorts to be reused here. */
-	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-		fprintf(stderr, "Failed to initalize SDL: %s\n", SDL_GetError());
-		return;
-	}
+	if (SDL_Init(SDL_INIT_VIDEO) != 0)
+		fatal_error("Failed to init SDL: %s\n", SDL_GetError());
 
 	font = font_load("terminus/ter-u12n.psf");
 	int window_width = cols * font.width;
 	int window_height = rows * font.height;
 
 	window = SDL_CreateWindow(title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, window_width, window_height, 0);
-	if (window == NULL) {
-		fprintf(stderr, "Failed to create a window: %s\n", SDL_GetError());
-		return;
-	}
+	if (window == NULL)
+		fatal_error("Failed to create window: %s\n", SDL_GetError());
 
 	renderer = SDL_CreateRenderer(window, -1, 0);
-	if (renderer == NULL) {
-		fprintf(stderr, "Failed to create a renderer: %s\n", SDL_GetError());
-		return;
-	}
+	if (renderer == NULL)
+		fatal_error("Failed to create renderer: %s\n", SDL_GetError());
 
 	font_texture = font_create_texture(renderer, &font);
 

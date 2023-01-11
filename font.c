@@ -31,9 +31,9 @@ SDL_Texture *font_create_texture(SDL_Renderer *renderer, PSFFont *font)
 	}
 
 	result = SDL_CreateTextureFromSurface(renderer, surface);
-	if (result == NULL) {
-		fprintf(stderr, "Failed to create texture: %s\n", SDL_GetError());
-	}
+	if (result == NULL)
+		fatal_error("Failed to create texture: %s\n", SDL_GetError());
+
 	SDL_FreeSurface(surface);
 
 	printf("Created font texture atlas of size %dx%d\n", surface->w, surface->h);
@@ -51,9 +51,8 @@ PSFFont font_load(const char *filename)
 	fseek(fp, 0, SEEK_SET);
 
 	fread(&font.magic, 4, 1, fp);
-	if (font.magic != PSF_MAGIC_NUMBER) {
-		printf("%x: Font '%s' header does not contain expected value.\n", font.magic, filename);
-	}
+	if (font.magic != PSF_MAGIC_NUMBER)
+		fatal_error("Font header mismatch! '%s' has magic value %x.\n", filename, font.magic);
 
 	fread(&font.version, 4, 1, fp);
 	fread(&font.header_size, 4, 1, fp);
