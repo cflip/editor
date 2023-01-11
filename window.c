@@ -13,7 +13,7 @@ static SDL_Texture *font_texture = NULL;
 
 static PSFFont font;
 
-void window_init()
+void window_init(const char *title, int rows, int cols)
 {
 	/* TODO: There should be a 'panic' method of sorts to be reused here. */
 	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
@@ -21,8 +21,11 @@ void window_init()
 		return;
 	}
 
-	window = SDL_CreateWindow("Bitmap font test", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-								640, 480, SDL_WINDOW_SHOWN);
+	font = font_load("terminus/ter-u12n.psf");
+	int window_width = cols * font.width;
+	int window_height = rows * font.height;
+
+	window = SDL_CreateWindow(title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, window_width, window_height, 0);
 	if (window == NULL) {
 		fprintf(stderr, "Failed to create a window: %s\n", SDL_GetError());
 		return;
@@ -34,7 +37,6 @@ void window_init()
 		return;
 	}
 
-	font = font_load("terminus/ter-u12n.psf");
 	font_texture = font_create_texture(renderer, &font);
 
 	SDL_ShowWindow(window);
@@ -142,6 +144,14 @@ void window_redraw(struct editor_state *editor)
 
 	SDL_RenderPresent(renderer);
 	SDL_UpdateWindowSurface(window);
+}
+
+void window_get_size(int *rows, int *cols)
+{
+	int w, h;
+	SDL_GetWindowSize(window, &w, &h);
+	*cols = w / font.width;
+	*rows = h / font.height;
 }
 
 void window_destroy()

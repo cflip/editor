@@ -28,8 +28,7 @@ void init_editor(struct editor_state* editor)
 	editor->status_message_time = 0;
 	editor->syntax = NULL;
 
-	if (get_window_size(&editor->screen_rows, &editor->screen_cols) == -1)
-		die("get_window_size");
+	window_get_size(&editor->screen_rows, &editor->screen_cols);
 
 	editor->screen_rows -= 2;
 }

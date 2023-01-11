@@ -5,7 +5,7 @@
 
 int main(int argc, char** argv)
 {
-	window_init();
+	window_init("Text editor", 40, 80);
 
 	struct editor_state editor;
 	init_editor(&editor);
