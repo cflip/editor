@@ -7,9 +7,9 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "error.h"
 #include "row.h"
 #include "syntax.h"
-#include "terminal.h"
 
 char* editor_rows_to_string(struct editor_state* editor, int* buffer_length)
 {
@@ -43,7 +43,7 @@ void editor_open(struct editor_state* editor, char* filename)
 
 	FILE* fp = fopen(filename, "r");
 	if (!fp)
-		die("fopen");
+		fatal_error("fopen");
 
 	char* line = NULL;
 	size_t line_capacity = 0;

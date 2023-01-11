@@ -5,12 +5,12 @@ OUT=editor
 OBJS=main.o     \
      buffer.o   \
      editor.o   \
+     error.o    \
      file.o     \
      font.o     \
      input.o    \
      row.o      \
      syntax.o   \
-     terminal.o \
      window.o
 
 .PHONY: all clean

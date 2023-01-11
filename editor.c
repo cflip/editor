@@ -10,7 +10,6 @@
 #include "buffer.h"
 #include "input.h"
 #include "syntax.h"
-#include "terminal.h"
 #include "row.h"
 
 void init_editor(struct editor_state* editor)
@@ -42,66 +41,14 @@ void editor_set_status_message(struct editor_state* editor, const char* format, 
 	editor->status_message_time = time(NULL);
 }
 
-void editor_refresh_screen(struct editor_state* editor)
-{
-	editor_scroll(editor);
-
-	struct append_buffer buffer = ABUF_INIT;
-
-	ab_append(&buffer, "\x1b[?25l", 6);
-	ab_append(&buffer, "\x1b[H", 3);
-
-	editor_draw_rows(editor, &buffer);
-	editor_draw_status_bar(editor, &buffer);
-	editor_draw_message_bar(editor, &buffer);
-
-	char buf[32];
-	snprintf(buf, sizeof(buf), "\x1b[%d;%dH", (editor->cursor_y - editor->row_offset) + 1, (editor->cursor_display_x - editor->col_offset) + 1);
-	ab_append(&buffer, buf, strlen(buf));
-
-	ab_append(&buffer, "\x1b[?25h", 6);
-
-	write(STDOUT_FILENO, buffer.buffer, buffer.length);
-	ab_free(&buffer);
-}
-
 char* editor_prompt(struct editor_state* editor, char* prompt, void (*callback)(struct editor_state*, char*, int))
 {
-	size_t buffer_size = 128;
-	char* buffer = malloc(buffer_size);
-
-	size_t buffer_length = 0;
-	buffer[0] = '\0';
-
-	while (1) {
-		editor_set_status_message(editor, prompt, buffer);
-		// TODO: This should refresh the active screen
-		//editor_refresh_screen();
-
-		int c = editor_read_key();
-		if (c == DELETE_KEY || c == BACKSPACE) {
-			if (buffer_length != 0) buffer[--buffer_length] = '\0';
-		} else if (c == '\x1b') {
-			editor_set_status_message(editor, "");
-			if (callback) callback(editor, buffer, c);
-			free(buffer);
-			return NULL;
-		} else if (c == '\r') {
-			if (buffer_length != 0) {
-				editor_set_status_message(editor, "");
-				if (callback) callback(editor, buffer, c);
-				return buffer;
-			}
-		} else if (!iscntrl(c) && c < 128) {
-			if (buffer_length == buffer_size - 1) {
-				buffer_size *= 2;
-				buffer = realloc(buffer, buffer_size);
-			}
-			buffer[buffer_length++] = c;
-			buffer[buffer_length] = '\0';
-		}
-		if (callback) callback(editor, buffer, c);
-	}
+	/* TODO: The previous implementation of this function relied on reading
+	 * input from the terminal, but now that we get input through window events
+	 * it's no longer possible to sit in an infinite loop waiting for keys here.
+	 */
+	printf("TODO: editor_prompt unimplemented\n");
+	return NULL;
 }
 
 void editor_insert_char(struct editor_state* editor, int c)
@@ -282,47 +229,26 @@ void editor_draw_rows(struct editor_state* editor, struct append_buffer* buffer)
 			int j;
 
 			for (j = 0; j < length; j++) {
-				if (iscntrl(c[j])) {
-					char symbol = (c[j] <= 26) ? '@' + c[j] : '?';
-					ab_append(buffer, "\x1b[7m", 4);
-					ab_append(buffer, &symbol, 1);
-					ab_append(buffer, "\x1b[m", 3);
+				/*
+				 * TODO: Move colour handling stuff to the window.
+				int colour = editor_syntax_to_colour(highlight[j]);
+				if (colour != current_colour) {
+					current_colour = colour;
+					char colour_buffer[16];
+					int colour_buffer_length = snprintf(colour_buffer, sizeof(colour_buffer), "\x1b[%dm", colour);
 
-					if (current_colour != -1) {
-						char buf[16];
-						int col_length = snprintf(buf, sizeof(buf), "\x1b[%dm", current_colour);
-						ab_append(buffer, buf, col_length);
-					}
-				} else if (highlight[j] == HIGHLIGHT_NORMAL) {
-					if (current_colour != -1) {
-						ab_append(buffer, "\x1b[39m", 5);
-						current_colour = -1;
-					}
-					ab_append(buffer, &c[j], 1);
-				} else {
-					int colour = editor_syntax_to_colour(highlight[j]);
-					if (colour != current_colour) {
-						current_colour = colour;
-						char colour_buffer[16];
-						int colour_buffer_length = snprintf(colour_buffer, sizeof(colour_buffer), "\x1b[%dm", colour);
-						
-						ab_append(buffer, colour_buffer, colour_buffer_length);
-					}
-					ab_append(buffer, &c[j], 1);
+					ab_append(buffer, colour_buffer, colour_buffer_length);
 				}
+				*/
+				ab_append(buffer, &c[j], 1);
 			}
-			ab_append(buffer, "\x1b[39m", 5);
 		}
-
-		ab_append(buffer, "\x1b[K", 3);
-		ab_append(buffer, "\r\n", 2);
+		ab_append(buffer, "\n", 1);
 	}
 }
 
 void editor_draw_status_bar(struct editor_state* editor, struct append_buffer* buffer)
 {
-	ab_append(buffer, "\x1b[7m", 4);
-
 	char status[80], right_status[80];
 	int length = snprintf(status, sizeof(status), "%.20s - %d lines %s", editor->filename ? editor->filename : "[New File]", editor->row_count, editor->dirty ? "(modified)" : "");
 	int right_length = snprintf(right_status, sizeof(right_status), "%s | %d/%d", editor->syntax ? editor->syntax->filetype : "plaintext", editor->cursor_y + 1, editor->row_count);
@@ -341,15 +267,11 @@ void editor_draw_status_bar(struct editor_state* editor, struct append_buffer* b
 			length++;
 		}
 	}
-
-	ab_append(buffer, "\x1b[m", 3);
-	ab_append(buffer, "\r\n", 2);
+	ab_append(buffer, "\n", 1);
 }
 
 void editor_draw_message_bar(struct editor_state* editor, struct append_buffer* buffer)
 {
-	ab_append(buffer, "\x1b[K", 3);
-
 	int message_length = strlen(editor->status_message);
 	
 	if (message_length > editor->screen_cols)
