@@ -4,9 +4,7 @@
 #include <SDL2/SDL.h>
 
 #define PSF_MAGIC_NUMBER 0x864ab572
-
-typedef struct {
-} PSFFontHeader;
+#define PSF_FLAG_UNICODE 1
 
 typedef struct {
 	uint32_t magic;
@@ -18,6 +16,7 @@ typedef struct {
 	uint32_t height;
 	uint32_t width;
 	uint8_t *glyph_data;
+	uint16_t *unicode_desc;
 } PSFFont;
 
 PSFFont font_load(const char *);

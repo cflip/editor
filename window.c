@@ -97,15 +97,21 @@ static void draw_font_text(struct append_buffer *buffer)
 
 	for (int i = 0; i < buffer->length; i++) {
 		const char letter = buffer->buffer[i];
-		if (letter > 128) {
-			printf("TODO: Non-ASCII characters are not currently supported.\n");
+		if (letter == ' ') {
+			dstrect.x += font.width;
 			continue;
+		}
+
+
+		int glyph_index = letter;
+		if (font.unicode_desc != NULL) {
+			glyph_index = font.unicode_desc[glyph_index];
 		}
 
 		dstrect.w = font.width;
 		dstrect.h = font.height;
 
-		srcrect.x = letter * 8;
+		srcrect.x = glyph_index * 8;
 		srcrect.y = 0;
 		srcrect.w = font.width;
 		srcrect.h = font.height;

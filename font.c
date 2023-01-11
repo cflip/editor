@@ -1,6 +1,7 @@
 #include "font.h"
 
 #include <assert.h>
+#include <limits.h>
 #include <stdlib.h>
 
 /* Create a texture atlas containing all of the glyphs in a font. */
@@ -45,8 +46,14 @@ PSFFont font_load(const char *filename)
 
 	FILE *fp = fopen(filename, "rb");
 
+	fseek(fp, 0, SEEK_END);
+	size_t filesize = ftell(fp);
+	fseek(fp, 0, SEEK_SET);
+
 	fread(&font.magic, 4, 1, fp);
-	assert(font.magic == PSF_MAGIC_NUMBER);
+	if (font.magic != PSF_MAGIC_NUMBER) {
+		printf("%x: Font '%s' header does not contain expected value.\n", font.magic, filename);
+	}
 
 	fread(&font.version, 4, 1, fp);
 	fread(&font.header_size, 4, 1, fp);
@@ -56,11 +63,34 @@ PSFFont font_load(const char *filename)
 	fread(&font.height, 4, 1, fp);
 	fread(&font.width, 4, 1, fp);
 
-	/* TODO: Implement unicode translation table. */
-
 	size_t glyph_buffer_size = font.num_glyphs * font.bytes_per_glyph;
 	font.glyph_data = malloc(glyph_buffer_size);
 	fread(font.glyph_data, font.bytes_per_glyph, font.num_glyphs, fp);
+
+	font.unicode_desc = NULL;
+	if (font.flags == PSF_FLAG_UNICODE) {
+		size_t current_pos = ftell(fp);
+		size_t bytes_left = filesize - current_pos;
+
+		/* Store the file's unicode information in a buffer. */
+		char *desc = malloc(bytes_left);
+		fread(desc, bytes_left, 1, fp);
+
+		/* Create a buffer in our object to map character codes to glyphs */
+		font.unicode_desc = calloc(USHRT_MAX, 2);
+
+		int glyph_index = 0;
+		unsigned char letter = 0;
+		for (int i = 0; i < bytes_left; i++) {
+			unsigned char uc = desc[i];
+			if (uc == 0xff) {
+				font.unicode_desc[letter] = glyph_index;
+				glyph_index++;
+			} else {
+				letter = uc;
+			}
+		}
+	}
 
 	fclose(fp);
 
