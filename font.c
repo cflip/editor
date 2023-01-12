@@ -9,8 +9,8 @@ SDL_Texture *font_create_texture(SDL_Renderer *renderer, PSFFont *font)
 {
 	SDL_Texture *result;
 
+	const int bytes_per_row = (font->bytes_per_glyph / font->height);
 	const int texture_width = font->num_glyphs * font->width;
-	const int bits_per_glyph = 8;
 	SDL_Surface *surface = SDL_CreateRGBSurface(0, texture_width, font->height, 32, 0, 0, 0, 0);
 
 	for (int glyph_idx = 0; glyph_idx < font->num_glyphs; glyph_idx++) {
@@ -20,11 +20,12 @@ SDL_Texture *font_create_texture(SDL_Renderer *renderer, PSFFont *font)
 				 * TODO: Make it possible for the texture atlas to have more
 				 * than one row.
 				 */
-				int xp = x + glyph_idx * bits_per_glyph;
+				int xp = x + glyph_idx * font->width;
 				int yp = y;
 
-				int bit_idx = 8 - 1 - x;
-				char current_bit = font->glyph_data[glyph_idx * font->bytes_per_glyph + y] & (1 << bit_idx);
+				int bit_idx = 7 - (x % 8);
+				int row_byte_idx = (glyph_idx * font->bytes_per_glyph) + y * bytes_per_row + (x / 8);
+				char current_bit = font->glyph_data[row_byte_idx] & (1 << bit_idx);
 				((Uint32*)(surface->pixels))[xp + yp * surface->w] = current_bit ? 0xffffffff : 0;
 			}
 		}
@@ -64,6 +65,7 @@ PSFFont font_load(const char *filename)
 
 	size_t glyph_buffer_size = font.num_glyphs * font.bytes_per_glyph;
 	font.glyph_data = malloc(glyph_buffer_size);
+	fseek(fp, font.header_size, SEEK_SET);
 	fread(font.glyph_data, font.bytes_per_glyph, font.num_glyphs, fp);
 
 	font.unicode_desc = NULL;

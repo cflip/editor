@@ -19,7 +19,7 @@ void window_init(const char *title, int rows, int cols)
 	if (SDL_Init(SDL_INIT_VIDEO) != 0)
 		fatal_error("Failed to init SDL: %s\n", SDL_GetError());
 
-	font = font_load("terminus/ter-u12n.psf");
+	font = font_load("terminus/ter-u24n.psf");
 	int window_width = cols * font.width;
 	int window_height = rows * font.height;
 
@@ -82,7 +82,7 @@ static void draw_font_text(struct append_buffer *buffer)
 		dstrect.w = font.width;
 		dstrect.h = font.height;
 
-		srcrect.x = glyph_index * 8;
+		srcrect.x = glyph_index * font.width;
 		srcrect.y = 0;
 		srcrect.w = font.width;
 		srcrect.h = font.height;
