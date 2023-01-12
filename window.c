@@ -105,6 +105,16 @@ void window_redraw(struct editor_state *editor)
 
 	draw_font_text(&buffer);
 
+	SDL_Rect cursor_rect;
+	cursor_rect.x = editor->cursor_display_x * font.width;
+	cursor_rect.y = (editor->cursor_y - editor->row_offset) * font.height;
+	cursor_rect.w = font.width;
+	cursor_rect.h = font.height;
+
+	SDL_SetRenderDrawColor(renderer, 0x7f, 0x7f, 0x7f, 0xff);
+	SDL_RenderFillRect(renderer, &cursor_rect);
+	SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0xff);
+
 	SDL_RenderPresent(renderer);
 	SDL_UpdateWindowSurface(window);
 }
