@@ -103,4 +103,5 @@ PSFFont font_load(const char *filename)
 void font_destroy(PSFFont *font)
 {
 	free(font->glyph_data);
+	free(font->unicode_desc);
 }
