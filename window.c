@@ -44,43 +44,12 @@ int window_handle_event(struct editor_state *editor)
 	case SDL_QUIT:
 		return 0;
 	case SDL_KEYDOWN:
-		int keycode = e.key.keysym.sym;
-		switch (e.key.keysym.sym) {
-		case SDLK_BACKSPACE:
-			keycode = BACKSPACE;
+		editor_process_keypress(editor, &e.key.keysym);
+		break;
+	case SDL_TEXTINPUT:
+		if (editor->mode == EDITOR_MODE_NORMAL)
 			break;
-		case SDLK_LEFT:
-			keycode = ARROW_LEFT;
-			break;
-		case SDLK_RIGHT:
-			keycode = ARROW_RIGHT;
-			break;
-		case SDLK_UP:
-			keycode = ARROW_UP;
-			break;
-		case SDLK_DOWN:
-			keycode = ARROW_DOWN;
-			break;
-		case SDLK_DELETE:
-			keycode = DELETE_KEY;
-			break;
-		case SDLK_HOME:
-			keycode = HOME_KEY;
-			break;
-		case SDLK_END:
-			keycode = END_KEY;
-			break;
-		case SDLK_PAGEUP:
-			keycode = PAGE_UP;
-			break;
-		case SDLK_PAGEDOWN:
-			keycode = PAGE_DOWN;
-			break;
-		}
-		if (e.key.keysym.mod & KMOD_CTRL) {
-			keycode = CTRL_KEY(keycode);
-		}
-		editor_process_keypress(editor, keycode);
+		editor_insert_char(editor, *e.text.text);
 		break;
 	}
 	return 1;

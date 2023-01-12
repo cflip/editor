@@ -4,6 +4,12 @@
 #include <time.h>
 #include "buffer.h"
 
+enum editor_mode {
+	EDITOR_MODE_NORMAL,
+	EDITOR_MODE_INSERT,
+	EDITOR_MODE_COMMAND
+};
+
 struct editor_state {
 	int cursor_x, cursor_y;
 	int cursor_display_x;
@@ -18,6 +24,7 @@ struct editor_state {
 	char status_message[80];
 	time_t status_message_time;
 	struct editor_syntax* syntax;
+	int mode;
 };
 
 void init_editor(struct editor_state* editor);

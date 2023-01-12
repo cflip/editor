@@ -26,6 +26,7 @@ void init_editor(struct editor_state* editor)
 	editor->status_message[0] = '\0';
 	editor->status_message_time = 0;
 	editor->syntax = NULL;
+	editor->mode = EDITOR_MODE_NORMAL;
 
 	window_get_size(&editor->screen_rows, &editor->screen_cols);
 
@@ -153,6 +154,7 @@ static void editor_find_callback(struct editor_state* editor, char* query, int k
 		saved_highlight = NULL;
 	}
 
+	/* TODO:
 	if (key == '\r' || key == '\x1b') {
 		last_match = -1;
 		direction = 1;
@@ -165,6 +167,7 @@ static void editor_find_callback(struct editor_state* editor, char* query, int k
 		last_match = -1;
 		direction = 1;
 	}
+	*/
 
 	if (last_match == -1)
 		direction = 1;
