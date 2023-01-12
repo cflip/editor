@@ -15,6 +15,9 @@ void editor_process_keypress(struct editor_state *editor, SDL_Keysym *keysym)
 		if (keysym->sym == SDLK_RETURN)
 			editor_insert_newline(editor);
 
+		if (keysym->sym == SDLK_TAB)
+			editor_insert_char(editor, '\t');
+
 		if (keysym->sym == SDLK_ESCAPE)
 			editor->mode = EDITOR_MODE_NORMAL;
 		return;
