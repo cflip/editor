@@ -1,4 +1,3 @@
-#include "input.h"
 #include "file.h"
 #include "editor.h"
 #include "window.h"
@@ -23,5 +22,7 @@ int main(int argc, char** argv)
 	}
 	
 	window_destroy();
+	editor_destroy(&editor);
+
 	return 0;
 }

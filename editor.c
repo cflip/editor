@@ -331,3 +331,11 @@ void editor_draw_message_bar(struct editor_state* editor, struct append_buffer* 
 	if (message_length && time(NULL) - editor->status_message_time < 5)
 		ab_append(buffer, editor->status_message, message_length);
 }
+
+void editor_destroy(struct editor_state *editor)
+{
+	free(editor->filename);
+	for (int i = 0; i < editor->row_count; i++)
+		free_row(&editor->rows[i]);
+	free(editor->rows);
+}
