@@ -18,8 +18,6 @@ enum editor_key {
 
 #define CTRL_KEY(k) ((k) & 0x1f)
 
-int editor_read_key();
-void editor_move_cursor(struct editor_state* editor, int key);
-void editor_process_keypress(struct editor_state* editor, int keycode);
+void editor_process_keypress(struct editor_state *editor, int keycode);
 
 #endif

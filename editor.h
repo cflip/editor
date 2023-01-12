@@ -23,8 +23,12 @@ struct editor_state {
 void init_editor(struct editor_state* editor);
 
 void editor_set_status_message(struct editor_state* editor, const char* format, ...);
-void editor_refresh_screen(struct editor_state* editor);
 char* editor_prompt(struct editor_state* editor, char* prompt, void (*callback)(struct editor_state*, char*, int));
+
+void editor_move_left(struct editor_state *);
+void editor_move_right(struct editor_state *);
+void editor_move_up(struct editor_state *);
+void editor_move_down(struct editor_state *);
 
 void editor_insert_char(struct editor_state* editor, int c);
 void editor_insert_newline(struct editor_state* editor);

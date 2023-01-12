@@ -7,41 +7,6 @@
 #include "file.h"
 #include "row.h"
 
-void editor_move_cursor(struct editor_state* editor, int key)
-{
-	struct editor_row* row = (editor->cursor_y >= editor->row_count) ? NULL : &editor->rows[editor->cursor_y];
-	
-	switch (key) {
-		case ARROW_LEFT:
-			if (editor->cursor_x != 0) {
-				editor->cursor_x--;
-			} else if (editor->cursor_y > 0) {
-				editor->cursor_y--;
-				editor->cursor_x = editor->rows[editor->cursor_y].size;
-			}
-			break;
-		case ARROW_RIGHT:
-			if (row && editor->cursor_x < row->size) {
-				editor->cursor_x++;
-			} else if (row && editor->cursor_x == row->size) {
-				editor->cursor_y++;
-				editor->cursor_x = 0;
-			}
-			break;
-		case ARROW_UP:
-			if (editor->cursor_y != 0) editor->cursor_y--;
-			break;
-		case ARROW_DOWN:
-			if (editor->cursor_y != editor->row_count - 1) editor->cursor_y++;
-			break;
-	}
-
-	row = (editor->cursor_y >= editor->row_count) ? NULL : &editor->rows[editor->cursor_y];
-	int row_length = row ? row->size : 0;
-	if (editor->cursor_x > row_length)
-		editor->cursor_x = row_length;
-}
-
 void editor_process_keypress(struct editor_state* editor, int c)
 {
 	static int quit_message = 1;
@@ -74,7 +39,7 @@ void editor_process_keypress(struct editor_state* editor, int c)
 		case BACKSPACE:
 		case DELETE_KEY:
 			if (c == DELETE_KEY) 
-				editor_move_cursor(editor, ARROW_RIGHT);
+				editor_move_right(editor);
 			editor_delete_char(editor);
 			break;
 		case PAGE_UP:
@@ -87,17 +52,24 @@ void editor_process_keypress(struct editor_state* editor, int c)
 					if (editor->cursor_y > editor->row_count)
 						editor->cursor_y = editor->row_count;
 				}
-
-				int times = editor->screen_rows;
-				while (times--)
-					editor_move_cursor(editor, c == PAGE_UP ? ARROW_UP : ARROW_DOWN);
+				/*
+				 * TODO: Reimplement pageup/pagedown, this time by scrolling the
+				 * screen without necessarily changing the position of the
+				 * cursor relative to the screen
+				 */
 			}
 			break;
 		case ARROW_UP:
+			editor_move_up(editor);
+			break;
 		case ARROW_DOWN:
+			editor_move_down(editor);
+			break;
 		case ARROW_LEFT:
+			editor_move_left(editor);
+			break;
 		case ARROW_RIGHT:
-			editor_move_cursor(editor, c);
+			editor_move_right(editor);
 			break;
 		case CTRL_KEY('l'):
 		case '\x1b':

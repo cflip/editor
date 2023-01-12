@@ -51,6 +51,49 @@ char* editor_prompt(struct editor_state* editor, char* prompt, void (*callback)(
 	return NULL;
 }
 
+void editor_move_left(struct editor_state *editor)
+{
+	if (editor->cursor_x != 0) {
+		editor->cursor_x--;
+	} else if (editor->cursor_y > 0) {
+		editor->cursor_y--;
+		editor->cursor_x = editor->rows[editor->cursor_y].size;
+	}
+}
+
+void editor_move_right(struct editor_state *editor)
+{
+	struct editor_row* row = (editor->cursor_y >= editor->row_count) ? NULL : &editor->rows[editor->cursor_y];
+	if (row && editor->cursor_x < row->size) {
+		editor->cursor_x++;
+	} else if (row && editor->cursor_x == row->size) {
+		editor->cursor_y++;
+		editor->cursor_x = 0;
+	}
+}
+
+void editor_move_up(struct editor_state *editor)
+{
+	if (editor->cursor_y != 0)
+		editor->cursor_y--;
+
+	struct editor_row *row = (editor->cursor_y >= editor->row_count) ? NULL : &editor->rows[editor->cursor_y];
+	int row_length = row ? row->size : 0;
+	if (editor->cursor_x > row_length)
+		editor->cursor_x = row_length;
+}
+
+void editor_move_down(struct editor_state *editor)
+{
+	if (editor->cursor_y != editor->row_count - 1)
+		editor->cursor_y++;
+
+	struct editor_row *row = (editor->cursor_y >= editor->row_count) ? NULL : &editor->rows[editor->cursor_y];
+	int row_length = row ? row->size : 0;
+	if (editor->cursor_x > row_length)
+		editor->cursor_x = row_length;
+}
+
 void editor_insert_char(struct editor_state* editor, int c)
 {
 	if (editor->cursor_y == editor->row_count)
