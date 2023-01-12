@@ -318,6 +318,11 @@ void editor_draw_status_bar(struct editor_state* editor, struct append_buffer* b
 
 void editor_draw_message_bar(struct editor_state* editor, struct append_buffer* buffer)
 {
+	if (editor->mode == EDITOR_MODE_INSERT) {
+		ab_append(buffer, "--INSERT--", 10);
+		return;
+	}
+
 	int message_length = strlen(editor->status_message);
 	
 	if (message_length > editor->screen_cols)
