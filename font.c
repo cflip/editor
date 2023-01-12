@@ -46,6 +46,8 @@ PSFFont font_load(const char *filename)
 	PSFFont font;
 
 	FILE *fp = fopen(filename, "rb");
+	if (!fp)
+		fatal_error("Failed to open font from '%s'\n", filename);
 
 	fseek(fp, 0, SEEK_END);
 	size_t filesize = ftell(fp);
