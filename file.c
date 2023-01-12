@@ -37,7 +37,9 @@ char* editor_rows_to_string(struct editor_state* editor, int* buffer_length)
 void editor_open(struct editor_state* editor, char* filename)
 {
 	free(editor->filename);
-	editor->filename = strdup(filename);
+	size_t filename_len = strlen(filename);
+	editor->filename = malloc(filename_len);
+	memcpy(editor->filename, filename, filename_len);
 
 	editor_select_syntax_highlight(editor);
 
