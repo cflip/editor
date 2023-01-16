@@ -140,6 +140,19 @@ void editor_delete_char(struct editor_state* editor)
 	}
 }
 
+void editor_add_line_above(struct editor_state* editor)
+{
+	insert_row(editor, editor->cursor_y, "", 0);
+	editor->cursor_x = 0;
+}
+
+void editor_add_line_below(struct editor_state* editor)
+{
+	insert_row(editor, editor->cursor_y + 1, "", 0);
+	editor->cursor_y++;
+	editor->cursor_x = 0;
+}
+
 static void editor_find_callback(struct editor_state* editor, char* query, int key)
 {
 	static int last_match = -1;

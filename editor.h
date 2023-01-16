@@ -40,6 +40,9 @@ void editor_move_down(struct editor_state *);
 void editor_insert_char(struct editor_state* editor, int c);
 void editor_insert_newline(struct editor_state* editor);
 void editor_delete_char(struct editor_state* editor);
+void editor_add_line_above(struct editor_state* editor);
+void editor_add_line_below(struct editor_state* editor);
+
 void editor_find(struct editor_state* editor);
 void editor_scroll(struct editor_state* editor);
 void editor_draw_rows(struct editor_state* editor, struct append_buffer* buffer);
