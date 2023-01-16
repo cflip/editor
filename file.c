@@ -37,15 +37,20 @@ char* editor_rows_to_string(struct editor_state* editor, int* buffer_length)
 void editor_open(struct editor_state* editor, char* filename)
 {
 	free(editor->filename);
-	size_t filename_len = strlen(filename);
+	size_t filename_len = strlen(filename) + 1;
 	editor->filename = malloc(filename_len);
 	memcpy(editor->filename, filename, filename_len);
 
 	editor_select_syntax_highlight(editor);
 
+	/* If there is no file with this name, the editor will create it on save. */
+	if (access(filename, F_OK) != 0)
+		return;
+
 	FILE* fp = fopen(filename, "r");
-	if (!fp)
-		fatal_error("fopen");
+	if (!fp) {
+		fatal_error("Failed to read file from %s\n", filename);
+	}
 
 	char* line = NULL;
 	size_t line_capacity = 0;
