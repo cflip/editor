@@ -49,6 +49,14 @@ int window_handle_event(struct editor_state *editor)
 	case SDL_TEXTINPUT:
 		if (editor->mode == EDITOR_MODE_NORMAL)
 			break;
+		/*
+		 * Ignore the first letter after entering insert mode, because it
+		 * usually is just 'i'.
+		 */
+		if (editor->pressed_insert_key) {
+			editor->pressed_insert_key = 0;
+			break;
+		}
 		editor_insert_char(editor, *e.text.text);
 		break;
 	}

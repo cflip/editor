@@ -25,6 +25,12 @@ struct editor_state {
 	time_t status_message_time;
 	struct editor_syntax* syntax;
 	int mode;
+	/*
+	 * Keep track of whether a key that toggles insert mode has been pressed, so
+	 * we can ignore it during the text input event. Otherwise, an 'i' or other
+	 * letter will be inserted when entering insert mode.
+	 */
+	int pressed_insert_key;
 };
 
 void init_editor(struct editor_state* editor);

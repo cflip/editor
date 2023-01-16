@@ -61,6 +61,7 @@ void editor_process_keypress(struct editor_state *editor, SDL_Keysym *keysym)
 			break;
 		case SDLK_i:
 			editor->mode = EDITOR_MODE_INSERT;
+			editor->pressed_insert_key = 1;
 			break;
 		case SDLK_a:
 			if (keysym->mod & KMOD_SHIFT)
@@ -68,6 +69,7 @@ void editor_process_keypress(struct editor_state *editor, SDL_Keysym *keysym)
 			else
 				editor_move_right(editor);
 			editor->mode = EDITOR_MODE_INSERT;
+			editor->pressed_insert_key = 1;
 			break;
 		case SDLK_o:
 			if (keysym->mod & KMOD_SHIFT)
@@ -75,6 +77,7 @@ void editor_process_keypress(struct editor_state *editor, SDL_Keysym *keysym)
 			else
 				editor_add_line_below(editor);
 			editor->mode = EDITOR_MODE_INSERT;
+			editor->pressed_insert_key = 1;
 			break;
 		case SDLK_k:
 			editor_move_up(editor);
