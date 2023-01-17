@@ -8,25 +8,25 @@
 #include <unistd.h>
 
 #include "error.h"
-#include "row.h"
+#include "line.h"
 #include "syntax.h"
 
-char* editor_rows_to_string(struct editor_state* editor, int* buffer_length)
+static char *lines_to_string(struct editor_state *editor, int *buffer_length)
 {
 	int total_length = 0;
 	int j;
 
-	for (j = 0; j < editor->row_count; j++)
-		total_length += editor->rows[j].size + 1;
+	for (j = 0; j < editor->num_lines; j++)
+		total_length += editor->lines[j].size + 1;
 
 	*buffer_length = total_length;
 
 	char* buffer = malloc(total_length);
 	char* p = buffer;
 
-	for (j = 0; j < editor->row_count; j++) {
-		memcpy(p, editor->rows[j].chars, editor->rows[j].size);
-		p += editor->rows[j].size;
+	for (j = 0; j < editor->num_lines; j++) {
+		memcpy(p, editor->lines[j].chars, editor->lines[j].size);
+		p += editor->lines[j].size;
 		*p = '\n';
 		p++;
 	}
@@ -60,7 +60,7 @@ void editor_open(struct editor_state* editor, char* filename)
 		while (line_length > 0 && (line[line_length - 1] == '\n' || line[line_length - 1] == '\r'))
 			line_length--;
 
-		insert_row(editor, editor->row_count, line, line_length);
+		editor_insert_line(editor, editor->num_lines, line, line_length);
 	}
 
 	free(line);
@@ -81,7 +81,7 @@ void editor_save(struct editor_state* editor)
 	}
 
 	int length;
-	char* buffer = editor_rows_to_string(editor, &length);
+	char *buffer = lines_to_string(editor, &length);
 
 	int fd = open(editor->filename, O_RDWR | O_CREAT, 0644);
 	if (fd != -1) {

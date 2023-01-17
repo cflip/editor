@@ -2,7 +2,9 @@
 #define _EDITOR_H
 
 #include <time.h>
+
 #include "buffer.h"
+#include "line.h"
 
 enum editor_mode {
 	EDITOR_MODE_NORMAL,
@@ -13,12 +15,12 @@ enum editor_mode {
 struct editor_state {
 	int cursor_x, cursor_y;
 	int cursor_display_x;
-	int row_offset;
+	int line_offset;
 	int col_offset;
 	int screen_rows;
 	int screen_cols;
-	int row_count;
-	struct editor_row* rows;
+	int num_lines;
+	line_t *lines;
 	int dirty;
 	char* filename;
 	char status_message[80];
@@ -42,6 +44,7 @@ void editor_move_left(struct editor_state *);
 void editor_move_right(struct editor_state *);
 void editor_move_up(struct editor_state *);
 void editor_move_down(struct editor_state *);
+void editor_move_end(struct editor_state *);
 
 void editor_insert_char(struct editor_state* editor, int c);
 void editor_insert_newline(struct editor_state* editor);

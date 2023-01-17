@@ -1,7 +1,8 @@
 #include "input.h"
 
 #include "editor.h"
-#include "row.h"
+#include "file.h"
+#include "line.h"
 
 void editor_process_keypress(struct editor_state *editor, SDL_Keysym *keysym)
 {
@@ -45,8 +46,8 @@ void editor_process_keypress(struct editor_state *editor, SDL_Keysym *keysym)
 			editor->cursor_x = 0;
 			break;
 		case SDLK_4:
-			if (keysym->mod & KMOD_SHIFT && editor->cursor_y < editor->row_count)
-				editor->cursor_x = editor->rows[editor->cursor_y].size;
+			if (keysym->mod & KMOD_SHIFT)
+				editor_move_end(editor);
 			break;
 		case SDLK_SLASH:
 			editor_find(editor);
@@ -65,7 +66,7 @@ void editor_process_keypress(struct editor_state *editor, SDL_Keysym *keysym)
 			break;
 		case SDLK_a:
 			if (keysym->mod & KMOD_SHIFT)
-				editor->cursor_x = editor->rows[editor->cursor_y].size;
+				editor_move_end(editor);
 			else
 				editor_move_right(editor);
 			editor->mode = EDITOR_MODE_INSERT;

@@ -9,7 +9,7 @@ OBJS=main.o     \
      file.o     \
      font.o     \
      input.o    \
-     row.o      \
+     line.o     \
      syntax.o   \
      window.o
 

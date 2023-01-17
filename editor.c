@@ -7,20 +7,19 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "buffer.h"
 #include "input.h"
 #include "syntax.h"
-#include "row.h"
+#include "window.h"
 
 void init_editor(struct editor_state* editor)
 {
 	editor->cursor_x = 0;
 	editor->cursor_y = 0;
 	editor->cursor_display_x = 0;
-	editor->row_offset = 0;
+	editor->line_offset = 0;
 	editor->col_offset = 0;
-	editor->row_count = 0;
-	editor->rows = NULL;
+	editor->num_lines = 0;
+	editor->lines = NULL;
 	editor->dirty = 0;
 	editor->filename = NULL;
 	editor->status_message[0] = '\0';
@@ -58,16 +57,16 @@ void editor_move_left(struct editor_state *editor)
 		editor->cursor_x--;
 	} else if (editor->cursor_y > 0) {
 		editor->cursor_y--;
-		editor->cursor_x = editor->rows[editor->cursor_y].size;
+		editor->cursor_x = editor->lines[editor->cursor_y].size;
 	}
 }
 
 void editor_move_right(struct editor_state *editor)
 {
-	struct editor_row* row = (editor->cursor_y >= editor->row_count) ? NULL : &editor->rows[editor->cursor_y];
-	if (row && editor->cursor_x < row->size) {
+	line_t *line = (editor->cursor_y >= editor->num_lines) ? NULL : &editor->lines[editor->cursor_y];
+	if (line && editor->cursor_x < line->size) {
 		editor->cursor_x++;
-	} else if (row && editor->cursor_x == row->size) {
+	} else if (line && editor->cursor_x == line->size) {
 		editor->cursor_y++;
 		editor->cursor_x = 0;
 	}
@@ -78,43 +77,49 @@ void editor_move_up(struct editor_state *editor)
 	if (editor->cursor_y != 0)
 		editor->cursor_y--;
 
-	struct editor_row *row = (editor->cursor_y >= editor->row_count) ? NULL : &editor->rows[editor->cursor_y];
-	int row_length = row ? row->size : 0;
-	if (editor->cursor_x > row_length)
-		editor->cursor_x = row_length;
+	line_t *line = (editor->cursor_y >= editor->num_lines) ? NULL : &editor->lines[editor->cursor_y];
+	int line_length = line ? line->size : 0;
+	if (editor->cursor_x > line_length)
+		editor->cursor_x = line_length;
 }
 
 void editor_move_down(struct editor_state *editor)
 {
-	if (editor->cursor_y != editor->row_count - 1)
+	if (editor->cursor_y != editor->num_lines - 1)
 		editor->cursor_y++;
 
-	struct editor_row *row = (editor->cursor_y >= editor->row_count) ? NULL : &editor->rows[editor->cursor_y];
-	int row_length = row ? row->size : 0;
-	if (editor->cursor_x > row_length)
-		editor->cursor_x = row_length;
+	line_t *line = (editor->cursor_y >= editor->num_lines) ? NULL : &editor->lines[editor->cursor_y];
+	int line_length = line ? line->size : 0;
+	if (editor->cursor_x > line_length)
+		editor->cursor_x = line_length;
+}
+
+void editor_move_end(struct editor_state *editor)
+{
+	if (editor->cursor_y < editor->num_lines)
+		editor->cursor_x = editor->lines[editor->cursor_y].size;
 }
 
 void editor_insert_char(struct editor_state* editor, int c)
 {
-	if (editor->cursor_y == editor->row_count)
-		insert_row(editor, editor->row_count, "", 0);
+	if (editor->cursor_y == editor->num_lines)
+		editor_insert_line(editor, editor->num_lines, "", 0);
 
-	row_insert_char(editor, &editor->rows[editor->cursor_y], editor->cursor_x, c);
+	line_insert_char(editor, &editor->lines[editor->cursor_y], editor->cursor_x, c);
 	editor->cursor_x++;
 }
 
 void editor_insert_newline(struct editor_state* editor)
 {
 	if (editor->cursor_x == 0) {
-		insert_row(editor, editor->cursor_y, "", 0);
+		editor_insert_line(editor, editor->cursor_y, "", 0);
 	} else {
-		struct editor_row* row = &editor->rows[editor->cursor_y];
-		insert_row(editor, editor->cursor_y + 1, &row->chars[editor->cursor_x], row->size - editor->cursor_x);
-		row = &editor->rows[editor->cursor_y];
-		row->size = editor->cursor_x;
-		row->chars[row->size] = '\0';
-		update_row(editor, row);
+		line_t *line = &editor->lines[editor->cursor_y];
+		editor_insert_line(editor, editor->cursor_y + 1, &line->chars[editor->cursor_x], line->size - editor->cursor_x);
+		line = &editor->lines[editor->cursor_y];
+		line->size = editor->cursor_x;
+		line->chars[line->size] = '\0';
+		editor_update_line(editor, line);
 	}
 	editor->cursor_y++;
 	editor->cursor_x = 0;
@@ -122,33 +127,33 @@ void editor_insert_newline(struct editor_state* editor)
 
 void editor_delete_char(struct editor_state* editor)
 {
-	if (editor->cursor_y == editor->row_count)
+	if (editor->cursor_y == editor->num_lines)
 		return;
 
 	if (editor->cursor_x == 0 && editor->cursor_y == 0)
 		return;
 
-	struct editor_row* row = &editor->rows[editor->cursor_y];
+	line_t *line = &editor->lines[editor->cursor_y];
 	if (editor->cursor_x > 0) {
-		row_delete_char(editor, row, editor->cursor_x - 1);
+		line_delete_char(editor, line, editor->cursor_x - 1);
 		editor->cursor_x--;
 	} else {
-		editor->cursor_x = editor->rows[editor->cursor_y - 1].size;
-		row_append_string(editor, &editor->rows[editor->cursor_y - 1], row->chars, row->size);
-		delete_row(editor, editor->cursor_y);
+		editor->cursor_x = editor->lines[editor->cursor_y - 1].size;
+		line_append_string(editor, &editor->lines[editor->cursor_y - 1], line->chars, line->size);
+		editor_delete_line(editor, editor->cursor_y);
 		editor->cursor_y--;
 	}
 }
 
 void editor_add_line_above(struct editor_state* editor)
 {
-	insert_row(editor, editor->cursor_y, "", 0);
+	editor_insert_line(editor, editor->cursor_y, "", 0);
 	editor->cursor_x = 0;
 }
 
 void editor_add_line_below(struct editor_state* editor)
 {
-	insert_row(editor, editor->cursor_y + 1, "", 0);
+	editor_insert_line(editor, editor->cursor_y + 1, "", 0);
 	editor->cursor_y++;
 	editor->cursor_x = 0;
 }
@@ -162,7 +167,7 @@ static void editor_find_callback(struct editor_state* editor, char* query, int k
 	static char* saved_highlight;
 
 	if (saved_highlight) {
-		memset(editor->rows[saved_highlight_line].highlight, (size_t)saved_highlight, editor->rows[saved_highlight_line].render_size);
+		memset(editor->lines[saved_highlight_line].highlight, (size_t)saved_highlight, editor->lines[saved_highlight_line].render_size);
 		free(saved_highlight);
 		saved_highlight = NULL;
 	}
@@ -187,27 +192,27 @@ static void editor_find_callback(struct editor_state* editor, char* query, int k
 	int current = last_match;	
 
 	int i;
-	for (i = 0; i < editor->row_count; i++) {
+	for (i = 0; i < editor->num_lines; i++) {
 		current += direction;
 		if (current == -1) {
-			current = editor->row_count - 1;
-		} else if (current == editor->row_count) {
+			current = editor->num_lines - 1;
+		} else if (current == editor->num_lines) {
 			current = 0;
 		}
 
-		struct editor_row* row = &editor->rows[current];
-		char* match = strstr(row->render, query);
+		line_t *line = &editor->lines[current];
+		char* match = strstr(line->render, query);
 		
 		if (match) {
 			last_match = current;
 			editor->cursor_y = current;
-			editor->cursor_x = row_display_x_to_x(row, match - row->render);
-			editor->row_offset = editor->row_count;
+			editor->cursor_x = row_display_x_to_x(line, match - line->render);
+			editor->line_offset = editor->num_lines;
 
 			saved_highlight_line = current;
-			saved_highlight = malloc(row->render_size);
-			memcpy(saved_highlight, row->highlight, row->render_size);
-			memset(&row->highlight[match - row->render], HIGHLIGHT_MATCH, strlen(query));
+			saved_highlight = malloc(line->render_size);
+			memcpy(saved_highlight, line->highlight, line->render_size);
+			memset(&line->highlight[match - line->render], HIGHLIGHT_MATCH, strlen(query));
 			break;
 		}
 	}
@@ -218,7 +223,7 @@ void editor_find(struct editor_state* editor)
 	int saved_cursor_x = editor->cursor_x;
 	int saved_cursor_y = editor->cursor_y;
 	int saved_col_offset = editor->col_offset;
-	int saved_row_offset = editor->row_offset;	
+	int saved_line_offset = editor->line_offset;	
 
 	char* query = editor_prompt(editor, "Search: %s (Use Esc/Arrows/Enter)", editor_find_callback);
 	if (query) {
@@ -227,21 +232,21 @@ void editor_find(struct editor_state* editor)
 		editor->cursor_x = saved_cursor_x;
 		editor->cursor_y = saved_cursor_y;
 		editor->col_offset = saved_col_offset;
-		editor->row_offset = saved_row_offset;
+		editor->line_offset = saved_line_offset;
 	}
 }
 
 void editor_scroll(struct editor_state* editor)
 {
 	editor->cursor_display_x = 0;
-	if (editor->cursor_y < editor->row_count)
-		editor->cursor_display_x = row_x_to_display_x(&editor->rows[editor->cursor_y], editor->cursor_x);
+	if (editor->cursor_y < editor->num_lines)
+		editor->cursor_display_x = row_x_to_display_x(&editor->lines[editor->cursor_y], editor->cursor_x);
 
-	if (editor->cursor_y < editor->row_offset)
-		editor->row_offset = editor->cursor_y;
+	if (editor->cursor_y < editor->line_offset)
+		editor->line_offset = editor->cursor_y;
 
-	if (editor->cursor_y >= editor->row_offset + editor->screen_rows)
-		editor->row_offset = editor->cursor_y - editor->screen_rows + 1;
+	if (editor->cursor_y >= editor->line_offset + editor->screen_rows)
+		editor->line_offset = editor->cursor_y - editor->screen_rows + 1;
 
 	if (editor->cursor_display_x < editor->col_offset)
 		editor->col_offset = editor->cursor_display_x;
@@ -254,9 +259,9 @@ void editor_draw_rows(struct editor_state* editor, struct append_buffer* buffer)
 {
 	int y;
 	for (y = 0; y < editor->screen_rows; y++) {
-		int file_row = y + editor->row_offset;
-		if (file_row >= editor->row_count) {
-			if (editor->row_count == 0 && y == editor->screen_rows / 3) {
+		int file_line = y + editor->line_offset;
+		if (file_line >= editor->num_lines) {
+			if (editor->num_lines == 0 && y == editor->screen_rows / 3) {
 				char welcome[80];
 				int welcome_length = snprintf(welcome, sizeof(welcome), "Welcome to cflip text editor");
 				
@@ -277,13 +282,13 @@ void editor_draw_rows(struct editor_state* editor, struct append_buffer* buffer)
 				ab_append(buffer, "~", 1);
 			}
 		} else {
-			int length = editor->rows[file_row].render_size - editor->col_offset;
+			int length = editor->lines[file_line].render_size - editor->col_offset;
 
 			if (length < 0) length = 0;
 			if (length > editor->screen_cols) length = editor->screen_cols;
 
-			char* c = &editor->rows[file_row].render[editor->col_offset];
-			unsigned char* highlight = &editor->rows[file_row].highlight[editor->col_offset];
+			char* c = &editor->lines[file_line].render[editor->col_offset];
+			unsigned char* highlight = &editor->lines[file_line].highlight[editor->col_offset];
 			int current_colour = -1;
 			int j;
 
@@ -309,8 +314,8 @@ void editor_draw_rows(struct editor_state* editor, struct append_buffer* buffer)
 void editor_draw_status_bar(struct editor_state* editor, struct append_buffer* buffer)
 {
 	char status[80], right_status[80];
-	int length = snprintf(status, sizeof(status), "%.20s - %d lines %s", editor->filename ? editor->filename : "[New File]", editor->row_count, editor->dirty ? "(modified)" : "");
-	int right_length = snprintf(right_status, sizeof(right_status), "%s | %d/%d", editor->syntax ? editor->syntax->filetype : "plaintext", editor->cursor_y + 1, editor->row_count);
+	int length = snprintf(status, sizeof(status), "%.20s - %d lines %s", editor->filename ? editor->filename : "[New File]", editor->num_lines, editor->dirty ? "(modified)" : "");
+	int right_length = snprintf(right_status, sizeof(right_status), "%s | %d/%d", editor->syntax ? editor->syntax->filetype : "plaintext", editor->cursor_y + 1, editor->num_lines);
 
 	if (length > editor->screen_cols)
 		length = editor->screen_cols;
@@ -348,7 +353,7 @@ void editor_draw_message_bar(struct editor_state* editor, struct append_buffer* 
 void editor_destroy(struct editor_state *editor)
 {
 	free(editor->filename);
-	for (int i = 0; i < editor->row_count; i++)
-		free_row(&editor->rows[i]);
-	free(editor->rows);
+	for (int i = 0; i < editor->num_lines; i++)
+		free_line(&editor->lines[i]);
+	free(editor->lines);
 }

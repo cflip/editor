@@ -1,6 +1,8 @@
 #include "syntax.h"
 
+#include <ctype.h>
 #include <string.h>
+
 #include "editor.h"
 
 char* c_highlight_extensions[] = { ".c", ".h", ".cpp", ".cc", NULL };
@@ -29,10 +31,10 @@ int is_separator(int c)
 	return isspace(c) || c == '\0' || strchr(",.()+-/*=~%<>[];", c) != NULL;
 }
 
-void editor_update_syntax(struct editor_state* editor, struct editor_row* row)
+void editor_update_syntax(struct editor_state *editor, line_t *line)
 {
-	row->highlight = realloc(row->highlight, row->render_size);
-	memset(row->highlight, HIGHLIGHT_NORMAL, row->render_size);
+	line->highlight = realloc(line->highlight, line->render_size);
+	memset(line->highlight, HIGHLIGHT_NORMAL, line->render_size);
 
 	if (editor->syntax == NULL)
 		return;
@@ -50,25 +52,25 @@ void editor_update_syntax(struct editor_state* editor, struct editor_row* row)
 
 	int previous_separator = 1;
 	int in_string = 0;
-	int in_comment = (row->index > 0 && editor->rows[row->index - 1].highlight_open_comment);
+	int in_comment = (line->index > 0 && editor->lines[line->index - 1].highlight_open_comment);
 
 	int i = 0;
-	while (i < row->render_size) {
-		char c = row->render[i];
-		unsigned char previous_highlight = (i > 0) ? row->highlight[i - 1] : HIGHLIGHT_NORMAL;
+	while (i < line->render_size) {
+		char c = line->render[i];
+		unsigned char previous_highlight = (i > 0) ? line->highlight[i - 1] : HIGHLIGHT_NORMAL;
 
 		if (single_line_comment_start_length && !in_string && !in_comment) {
-			if (!strncmp(&row->render[i], single_line_comment_start, single_line_comment_start_length)) {
-				memset(&row->highlight[i], HIGHLIGHT_COMMENT, row->render_size - i);
+			if (!strncmp(&line->render[i], single_line_comment_start, single_line_comment_start_length)) {
+				memset(&line->highlight[i], HIGHLIGHT_COMMENT, line->render_size - i);
 				break;
 			}			
 		}
 
 		if (multi_line_comment_start_length && multi_line_comment_end_length && !in_string) {
 			if (in_comment) {
-				row->highlight[i] = HIGHLIGHT_MULTILINE_COMMENT;
-				if (!strncmp(&row->render[i], multi_line_comment_end, multi_line_comment_end_length)) {
-					memset(&row->highlight[i], HIGHLIGHT_MULTILINE_COMMENT, multi_line_comment_end_length);
+				line->highlight[i] = HIGHLIGHT_MULTILINE_COMMENT;
+				if (!strncmp(&line->render[i], multi_line_comment_end, multi_line_comment_end_length)) {
+					memset(&line->highlight[i], HIGHLIGHT_MULTILINE_COMMENT, multi_line_comment_end_length);
 
 					i += multi_line_comment_end_length;
 					in_comment = 0;
@@ -78,8 +80,8 @@ void editor_update_syntax(struct editor_state* editor, struct editor_row* row)
 					i++;
 					continue;
 				}
-			} else if (!strncmp(&row->render[i], multi_line_comment_start, multi_line_comment_start_length)) {
-				memset(&row->highlight[i], HIGHLIGHT_MULTILINE_COMMENT, multi_line_comment_start_length);
+			} else if (!strncmp(&line->render[i], multi_line_comment_start, multi_line_comment_start_length)) {
+				memset(&line->highlight[i], HIGHLIGHT_MULTILINE_COMMENT, multi_line_comment_start_length);
 				i += multi_line_comment_start_length;
 				in_comment = 1;
 				continue;
@@ -88,10 +90,10 @@ void editor_update_syntax(struct editor_state* editor, struct editor_row* row)
 
 		if (editor->syntax->flags & HIGHLIGHT_FLAG_STRINGS) {
 			if (in_string) {
-				row->highlight[i] = HIGHLIGHT_STRING;
+				line->highlight[i] = HIGHLIGHT_STRING;
 
-				if (c == '\\' && i + 1 < row->render_size) {
-					row->highlight[i + 1] = HIGHLIGHT_STRING;
+				if (c == '\\' && i + 1 < line->render_size) {
+					line->highlight[i + 1] = HIGHLIGHT_STRING;
 					i += 2;
 					continue;
 				}
@@ -105,7 +107,7 @@ void editor_update_syntax(struct editor_state* editor, struct editor_row* row)
 			} else {
 				if (c == '"' || c == '\'') {
 					in_string = c;
-					row->highlight[i] = HIGHLIGHT_STRING;
+					line->highlight[i] = HIGHLIGHT_STRING;
 					i++;
 					continue;
 				}
@@ -114,7 +116,7 @@ void editor_update_syntax(struct editor_state* editor, struct editor_row* row)
 
 		if (editor->syntax->flags & HIGHLIGHT_FLAG_NUMBERS) {
 			if ((isdigit(c) && (previous_separator || previous_highlight == HIGHLIGHT_NUMBER)) || (c == '.' && previous_highlight == HIGHLIGHT_NUMBER)) {
-				row->highlight[i] = HIGHLIGHT_NUMBER;
+				line->highlight[i] = HIGHLIGHT_NUMBER;
 				i++;
 				previous_separator = 0;
 				continue;
@@ -130,8 +132,8 @@ void editor_update_syntax(struct editor_state* editor, struct editor_row* row)
 				if (is_secondary)
 					keyword_length--;
 
-				if (!strncmp(&row->render[i], keywords[j], keyword_length) && is_separator(row->render[i + keyword_length])) {
-					memset(&row->highlight[i], is_secondary ? HIGHLIGHT_KEYWORD2 : HIGHLIGHT_KEYWORD1, keyword_length);
+				if (!strncmp(&line->render[i], keywords[j], keyword_length) && is_separator(line->render[i + keyword_length])) {
+					memset(&line->highlight[i], is_secondary ? HIGHLIGHT_KEYWORD2 : HIGHLIGHT_KEYWORD1, keyword_length);
 					i += keyword_length;
 					break;
 				}
@@ -146,10 +148,10 @@ void editor_update_syntax(struct editor_state* editor, struct editor_row* row)
 		i++;
 	}
 
-	int changed = (row->highlight_open_comment != in_comment);
-	row->highlight_open_comment = in_comment;
-	if (changed && row->index + 1 < editor->row_count)
-		editor_update_syntax(editor, &editor->rows[row->index + 1]);
+	int changed = (line->highlight_open_comment != in_comment);
+	line->highlight_open_comment = in_comment;
+	if (changed && line->index + 1 < editor->num_lines)
+		editor_update_syntax(editor, &editor->lines[line->index + 1]);
 }
 
 int editor_syntax_to_colour(int highlight)
@@ -184,10 +186,8 @@ void editor_select_syntax_highlight(struct editor_state* editor)
 			if ((is_extension && extension && !strcmp(extension, syntax->filetype_match[i])) || (!is_extension && strstr(editor->filename, syntax->filetype_match[i]))) {
 				editor->syntax = syntax;
 
-				int file_row;
-				for (file_row = 0; file_row < editor->row_count; file_row++) {
-					editor_update_syntax(editor, &editor->rows[file_row]);
-				}
+				for (int line = 0; line < editor->num_lines; line++)
+					editor_update_syntax(editor, &editor->lines[line]);
 				
 				return;
 			}

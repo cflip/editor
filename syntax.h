@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 #include "editor.h"
-#include "row.h"
+#include "line.h"
 
 #define HIGHLIGHT_FLAG_NUMBERS (1 << 0)
 #define HIGHLIGHT_FLAG_STRINGS (1 << 1)
@@ -32,7 +32,7 @@ enum editor_highlight {
 
 #define HIGHLIGHT_DATABASE_ENTRY_COUNT (sizeof(highlight_database) / sizeof(highlight_database[0]))
 
-void editor_update_syntax(struct editor_state* editor, struct editor_row* row);
+void editor_update_syntax(struct editor_state* editor, line_t*);
 int editor_syntax_to_colour(int highlight);
 void editor_select_syntax_highlight(struct editor_state* editor);
 
