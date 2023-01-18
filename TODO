@@ -1,3 +1,0 @@
-- Write comments in some of the messy code
-- Unify coding style; struct should have CamelCase names
-- Try and keep editor_state out of row.c
