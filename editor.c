@@ -27,9 +27,7 @@ void init_editor(struct editor_state* editor)
 	editor->syntax = NULL;
 	editor->mode = EDITOR_MODE_NORMAL;
 
-	window_get_size(&editor->screen_rows, &editor->screen_cols);
-
-	editor->screen_rows -= 2;
+	editor_update_screen_size(editor);
 }
 
 void editor_set_status_message(struct editor_state* editor, const char* format, ...)
@@ -253,6 +251,12 @@ void editor_scroll(struct editor_state* editor)
 
 	if (editor->cursor_display_x >= editor->col_offset + editor->screen_cols)
 		editor->col_offset = editor->cursor_display_x - editor->screen_cols + 1;
+}
+
+void editor_update_screen_size(struct editor_state *editor)
+{
+	window_get_size(&editor->screen_rows, &editor->screen_cols);
+	editor->screen_rows -= 2;
 }
 
 void editor_draw_rows(struct editor_state* editor, struct append_buffer* buffer)

@@ -23,7 +23,7 @@ void window_init(const char *title, int rows, int cols)
 	int window_width = cols * font.width;
 	int window_height = rows * font.height;
 
-	window = SDL_CreateWindow(title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, window_width, window_height, 0);
+	window = SDL_CreateWindow(title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, window_width, window_height, SDL_WINDOW_RESIZABLE);
 	if (window == NULL)
 		fatal_error("Failed to create window: %s\n", SDL_GetError());
 
@@ -58,6 +58,10 @@ int window_handle_event(struct editor_state *editor)
 			break;
 		}
 		editor_insert_char(editor, *e.text.text);
+		break;
+	case SDL_WINDOWEVENT:
+		if (e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+			editor_update_screen_size(editor);
 		break;
 	}
 	return 1;
