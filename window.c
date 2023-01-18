@@ -118,7 +118,7 @@ void window_redraw(struct editor_state *editor)
 	draw_font_text(&buffer);
 
 	SDL_Rect cursor_rect;
-	cursor_rect.x = editor->cursor_display_x * font.width;
+	cursor_rect.x = (editor->cursor_display_x - editor->col_offset) * font.width;
 	cursor_rect.y = (editor->cursor_y - editor->line_offset) * font.height;
 	cursor_rect.w = font.width;
 	cursor_rect.h = font.height;
