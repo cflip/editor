@@ -55,9 +55,8 @@ void editor_add_line_below(struct editor_state* editor);
 void editor_find(struct editor_state* editor);
 void editor_scroll(struct editor_state* editor);
 void editor_update_screen_size(struct editor_state *);
-void editor_draw_rows(struct editor_state* editor, struct append_buffer* buffer);
-void editor_draw_status_bar(struct editor_state* editor, struct append_buffer* buffer);
-void editor_draw_message_bar(struct editor_state* editor, struct append_buffer* buffer);
+void editor_draw_status_bar(struct editor_state *editor, struct append_buffer *buffer);
+void editor_draw_message_bar(struct editor_state *editor, struct append_buffer *buffer);
 
 void editor_destroy(struct editor_state *editor);
 

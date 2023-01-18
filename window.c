@@ -12,6 +12,9 @@ static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
 static SDL_Texture *font_texture = NULL;
 
+static int window_width;
+static int window_height;
+
 static PSFFont font;
 
 void window_init(const char *title, int rows, int cols)
@@ -20,8 +23,8 @@ void window_init(const char *title, int rows, int cols)
 		fatal_error("Failed to init SDL: %s\n", SDL_GetError());
 
 	font = font_load("terminus/ter-u24n.psf");
-	int window_width = cols * font.width;
-	int window_height = rows * font.height;
+	window_width = cols * font.width;
+	window_height = rows * font.height;
 
 	window = SDL_CreateWindow(title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, window_width, window_height, SDL_WINDOW_RESIZABLE);
 	if (window == NULL)
@@ -60,48 +63,80 @@ int window_handle_event(struct editor_state *editor)
 		editor_insert_char(editor, *e.text.text);
 		break;
 	case SDL_WINDOWEVENT:
-		if (e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+		if (e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+			SDL_GetWindowSize(window, &window_width, &window_height);
 			editor_update_screen_size(editor);
+		}
 		break;
 	}
 	return 1;
 }
 
-static void draw_font_text(struct append_buffer *buffer)
+static void draw_string(const char *str, size_t len, int x, int y)
 {
-	SDL_Rect dstrect = { 0, 0, 0, 0 };
-	SDL_Rect srcrect = { 0, 0, 0, 0 };
+	SDL_Rect dstrect = { x, y, font.width, font.height };
+	SDL_Rect srcrect = { 0, 0, font.width, font.height };
 
-	for (int i = 0; i < buffer->length; i++) {
-		const char letter = buffer->buffer[i];
-
-		if (letter == ' ') {
-			dstrect.x += font.width;
-			continue;
-		}
+	for (int i = 0; i < len; i++) {
+		const char letter = str[i];
 
 		if (letter == '\n') {
-			dstrect.x = 0;
+			dstrect.x = x;
 			dstrect.y += font.height;
 			continue;
 		}
 
-		int glyph_index = letter;
-		if (font.unicode_desc != NULL) {
-			glyph_index = font.unicode_desc[glyph_index];
+		if (isspace(letter)) {
+			dstrect.x += font.width;
+			continue;
 		}
 
-		dstrect.w = font.width;
-		dstrect.h = font.height;
+		if (letter == '\0')
+			break;
 
+		int glyph_index = letter;
+		if (font.unicode_desc != NULL)
+			glyph_index = font.unicode_desc[glyph_index];
 		srcrect.x = glyph_index * font.width;
-		srcrect.y = 0;
-		srcrect.w = font.width;
-		srcrect.h = font.height;
+
 		SDL_RenderCopy(renderer, font_texture, &srcrect, &dstrect);
 
 		dstrect.x += font.width;
 	}
+}
+
+static void draw_editor(struct editor_state *editor)
+{
+	int line_y;
+
+	/* Draw each line of text. */
+	for (int i = 0; i < editor->screen_rows; i++) {
+		line_y = i * font.height;
+
+		if (i + editor->line_offset >= editor->num_lines) {
+			draw_string("~", 1, 0, line_y);
+			continue;
+		}
+
+		line_t *line = &editor->lines[i + editor->line_offset];
+
+		/* Size and length of the text including the scroll offset. */
+		char *printed_text = &line->render[editor->col_offset];
+		size_t printed_size = line->render_size - editor->col_offset;
+		if (line->render_size >= printed_size)
+			draw_string(printed_text, printed_size, 0, line_y);
+	}
+
+	/* Draw the statusline containing file information */
+	struct append_buffer statusbuf = ABUF_INIT;
+
+	editor_draw_status_bar(editor, &statusbuf);
+	editor_draw_message_bar(editor, &statusbuf);
+
+	line_y = window_height - (font.height * 2);
+	draw_string(statusbuf.buffer, statusbuf.length, 0, line_y);
+
+	ab_free(&statusbuf);
 }
 
 void window_redraw(struct editor_state *editor)
@@ -109,13 +144,7 @@ void window_redraw(struct editor_state *editor)
 	SDL_RenderClear(renderer);
 
 	editor_scroll(editor);
-	struct append_buffer buffer = ABUF_INIT;
-
-	editor_draw_rows(editor, &buffer);
-	editor_draw_status_bar(editor, &buffer);
-	editor_draw_message_bar(editor, &buffer);
-
-	draw_font_text(&buffer);
+	draw_editor(editor);
 
 	SDL_Rect cursor_rect;
 	cursor_rect.x = (editor->cursor_display_x - editor->col_offset) * font.width;
@@ -133,10 +162,8 @@ void window_redraw(struct editor_state *editor)
 
 void window_get_size(int *rows, int *cols)
 {
-	int w, h;
-	SDL_GetWindowSize(window, &w, &h);
-	*cols = w / font.width;
-	*rows = h / font.height;
+	*cols = window_width / font.width;
+	*rows = window_height / font.height;
 }
 
 void window_destroy()
