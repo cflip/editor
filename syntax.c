@@ -13,7 +13,7 @@ char* c_highlight_keywords[] = {
 	"#include", "#define", "#ifdef", "#ifndef",
 
 	"int|", "long|", "double|", "float|", "char|", "unsigned|", "signed|",
-	"void|", NULL
+	"void|", "const|", NULL
 };
 
 struct editor_syntax highlight_database[] = {
