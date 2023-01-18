@@ -158,13 +158,13 @@ int editor_syntax_to_colour(int highlight)
 {
 	switch (highlight) {
 		case HIGHLIGHT_MULTILINE_COMMENT:
-		case HIGHLIGHT_COMMENT: return 36;
-		case HIGHLIGHT_KEYWORD1: return 33;
-		case HIGHLIGHT_KEYWORD2: return 32;
-		case HIGHLIGHT_STRING: return 35;
-		case HIGHLIGHT_NUMBER: return 31;
-		case HIGHLIGHT_MATCH: return 34;
-		default: return 37;
+		case HIGHLIGHT_COMMENT: return 0x00ff00;
+		case HIGHLIGHT_KEYWORD1: return 0x00ffff;
+		case HIGHLIGHT_KEYWORD2: return 0xff00ff;
+		case HIGHLIGHT_STRING: return 0x7f7fff;
+		case HIGHLIGHT_NUMBER: return 0xff0000;
+		case HIGHLIGHT_MATCH: return 0xff7fff;
+		default: return 0xfffffff;
 	}
 }
 

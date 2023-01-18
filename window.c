@@ -7,6 +7,7 @@
 #include "error.h"
 #include "font.h"
 #include "input.h"
+#include "syntax.h"
 
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
@@ -72,10 +73,11 @@ int window_handle_event(struct editor_state *editor)
 	return 1;
 }
 
-static void draw_string(const char *str, size_t len, int x, int y)
+static void draw_string(const char *str, const uint8_t *highlight, size_t len, int x, int y)
 {
 	SDL_Rect dstrect = { x, y, font.width, font.height };
 	SDL_Rect srcrect = { 0, 0, font.width, font.height };
+	int current_colour = 0xffffff;
 
 	for (int i = 0; i < len; i++) {
 		const char letter = str[i];
@@ -99,6 +101,18 @@ static void draw_string(const char *str, size_t len, int x, int y)
 			glyph_index = font.unicode_desc[glyph_index];
 		srcrect.x = glyph_index * font.width;
 
+		int colour = current_colour;
+		if (highlight != NULL)
+			colour = editor_syntax_to_colour(highlight[i]);
+
+		if (colour != current_colour) {
+			current_colour = colour;
+			unsigned char r = (colour >> 16) & 0xff;
+			unsigned char g = (colour >> 8) & 0xff;
+			unsigned char b = colour & 0xff;
+			SDL_SetTextureColorMod(font_texture, r, g, b);
+		}
+
 		SDL_RenderCopy(renderer, font_texture, &srcrect, &dstrect);
 
 		dstrect.x += font.width;
@@ -114,7 +128,8 @@ static void draw_editor(struct editor_state *editor)
 		line_y = i * font.height;
 
 		if (i + editor->line_offset >= editor->num_lines) {
-			draw_string("~", 1, 0, line_y);
+			SDL_SetTextureColorMod(font_texture, 0xcc, 0x00, 0xcc);
+			draw_string("~", NULL, 1, 0, line_y);
 			continue;
 		}
 
@@ -122,9 +137,10 @@ static void draw_editor(struct editor_state *editor)
 
 		/* Size and length of the text including the scroll offset. */
 		char *printed_text = &line->render[editor->col_offset];
+		unsigned char *printed_highlight = &line->highlight[editor->col_offset];
 		size_t printed_size = line->render_size - editor->col_offset;
 		if (line->render_size >= printed_size)
-			draw_string(printed_text, printed_size, 0, line_y);
+			draw_string(printed_text, printed_highlight, printed_size, 0, line_y);
 	}
 
 	/* Draw the statusline containing file information */
@@ -134,7 +150,8 @@ static void draw_editor(struct editor_state *editor)
 	editor_draw_message_bar(editor, &statusbuf);
 
 	line_y = window_height - (font.height * 2);
-	draw_string(statusbuf.buffer, statusbuf.length, 0, line_y);
+	SDL_SetTextureColorMod(font_texture, 0xff, 0xff, 0xff);
+	draw_string(statusbuf.buffer, NULL, statusbuf.length, 0, line_y);
 
 	ab_free(&statusbuf);
 }
