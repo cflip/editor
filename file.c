@@ -42,6 +42,7 @@ void editor_open(struct editor_state* editor, char* filename)
 	memcpy(editor->filename, filename, filename_len);
 
 	editor_select_syntax_highlight(editor);
+	window_set_filename(filename);
 
 	/* If there is no file with this name, the editor will create it on save. */
 	if (access(filename, F_OK) != 0)
@@ -78,6 +79,7 @@ void editor_save(struct editor_state* editor)
 			return;
 
 		editor_select_syntax_highlight(editor);
+		window_set_filename(editor->filename);
 	}
 
 	int length;

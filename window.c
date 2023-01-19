@@ -1,5 +1,6 @@
 #include "window.h"
 
+#include <unistd.h>
 #include <SDL2/SDL.h>
 
 #include "buffer.h"
@@ -175,6 +176,20 @@ void window_redraw(struct editor_state *editor)
 
 	SDL_RenderPresent(renderer);
 	SDL_UpdateWindowSurface(window);
+}
+
+void window_set_filename(const char *filename)
+{
+#define TITLE_BUFSIZE 128
+#define WORKDIR_BUFSIZE 128
+
+	char titlebuf[TITLE_BUFSIZE];
+	char cwdbuf[WORKDIR_BUFSIZE];
+	char *workdir;
+	workdir = getcwd(cwdbuf, WORKDIR_BUFSIZE);
+
+	snprintf(titlebuf, TITLE_BUFSIZE, "%s - (%s)", filename, workdir);
+	SDL_SetWindowTitle(window, titlebuf);
 }
 
 void window_get_size(int *rows, int *cols)

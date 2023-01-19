@@ -28,6 +28,7 @@ void init_editor(struct editor_state* editor)
 	editor->mode = EDITOR_MODE_NORMAL;
 
 	editor_update_screen_size(editor);
+	window_set_filename("[New]");
 }
 
 void editor_set_status_message(struct editor_state* editor, const char* format, ...)
