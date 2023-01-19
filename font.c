@@ -4,6 +4,10 @@
 #include <limits.h>
 #include <stdlib.h>
 
+#include <zlib.h>
+
+#include "error.h"
+
 /* Create a texture atlas containing all of the glyphs in a font. */
 SDL_Texture *font_create_texture(SDL_Renderer *renderer, PSFFont *font)
 {
@@ -45,46 +49,39 @@ PSFFont font_load(const char *filename)
 {
 	PSFFont font;
 
-	FILE *fp = fopen(filename, "rb");
-	if (!fp)
+	gzFile file = gzopen(filename, "rb");
+	if (!file)
 		fatal_error("Failed to open font from '%s'\n", filename);
 
-	fseek(fp, 0, SEEK_END);
-	size_t filesize = ftell(fp);
-	fseek(fp, 0, SEEK_SET);
-
-	fread(&font.magic, 4, 1, fp);
+	gzread(file, &font.magic, 4);
 	if (font.magic != PSF_MAGIC_NUMBER)
 		fatal_error("Font header mismatch! '%s' has magic value %x.\n", filename, font.magic);
 
-	fread(&font.version, 4, 1, fp);
-	fread(&font.header_size, 4, 1, fp);
-	fread(&font.flags, 4, 1, fp);
-	fread(&font.num_glyphs, 4, 1, fp);
-	fread(&font.bytes_per_glyph, 4, 1, fp);
-	fread(&font.height, 4, 1, fp);
-	fread(&font.width, 4, 1, fp);
+	gzread(file, &font.version, 4);
+	gzread(file, &font.header_size, 4);
+	gzread(file, &font.flags, 4);
+	gzread(file, &font.num_glyphs, 4);
+	gzread(file, &font.bytes_per_glyph, 4);
+	gzread(file, &font.height, 4);
+	gzread(file, &font.width, 4);
 
 	size_t glyph_buffer_size = font.num_glyphs * font.bytes_per_glyph;
 	font.glyph_data = malloc(glyph_buffer_size);
-	fseek(fp, font.header_size, SEEK_SET);
-	fread(font.glyph_data, font.bytes_per_glyph, font.num_glyphs, fp);
+	gzseek(file, font.header_size, SEEK_SET);
+	gzread(file, font.glyph_data, font.bytes_per_glyph * font.num_glyphs);
 
 	font.unicode_desc = NULL;
 	if (font.flags == PSF_FLAG_UNICODE) {
-		size_t current_pos = ftell(fp);
-		size_t bytes_left = filesize - current_pos;
-
 		/* Store the file's unicode information in a buffer. */
-		char *desc = malloc(bytes_left);
-		fread(desc, bytes_left, 1, fp);
+		char *desc = malloc(UNICODE_TABLE_SIZE);
+		gzread(file, desc, UNICODE_TABLE_SIZE);
 
 		/* Create a buffer in our object to map character codes to glyphs */
 		font.unicode_desc = calloc(USHRT_MAX, 2);
 
 		int glyph_index = 0;
 		unsigned char letter = 0;
-		for (int i = 0; i < bytes_left; i++) {
+		for (int i = 0; i < UNICODE_TABLE_SIZE; i++) {
 			unsigned char uc = desc[i];
 			if (uc == 0xff) {
 				font.unicode_desc[letter] = glyph_index;
@@ -95,7 +92,7 @@ PSFFont font_load(const char *filename)
 		}
 	}
 
-	fclose(fp);
+	gzclose(file);
 
 	printf("Loaded a font with %d glyphs of size %dx%d (%d bytes per glyph)\n", 
 			font.num_glyphs, font.width, font.height, font.bytes_per_glyph);

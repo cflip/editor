@@ -24,7 +24,7 @@ void window_init(const char *title, int rows, int cols)
 	if (SDL_Init(SDL_INIT_VIDEO) != 0)
 		fatal_error("Failed to init SDL: %s\n", SDL_GetError());
 
-	font = font_load("terminus/ter-u24n.psf");
+	font = font_load("/usr/local/share/consolefonts/ter-u18n.psf.gz");
 	window_width = cols * font.width;
 	window_height = rows * font.height;
 

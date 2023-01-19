@@ -1,5 +1,5 @@
 CFLAGS=-std=c99 -g -Wall
-LFLAGS=-lSDL2
+LFLAGS=-lSDL2 -lz
 
 OUT=editor
 OBJS=main.o     \

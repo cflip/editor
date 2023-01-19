@@ -6,6 +6,9 @@
 #define PSF_MAGIC_NUMBER 0x864ab572
 #define PSF_FLAG_UNICODE 1
 
+/* TODO: It would be nice if this could be calculated while loading the font */
+#define UNICODE_TABLE_SIZE 1024
+
 typedef struct {
 	uint32_t magic;
 	uint32_t version;
