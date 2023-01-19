@@ -13,15 +13,21 @@ OBJS=main.o     \
      syntax.o   \
      window.o
 
-.PHONY: all clean
+DESTDIR=/usr/local
+
+.PHONY: all clean install
 
 all: $(OUT)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-${OUT}: $(OBJS)
+$(OUT): $(OBJS)
 	$(CC) $(LFLAGS) $^ -o $@
 
 clean:
 	rm -f $(OBJS) $(OUT)
+
+install:
+	mkdir -p $(DESTDIR)/bin/
+	cp $(OUT) $(DESTDIR)/bin/
