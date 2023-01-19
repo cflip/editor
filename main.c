@@ -4,7 +4,7 @@
 
 int main(int argc, char** argv)
 {
-	window_init("Text editor", 40, 80);
+	window_init("Text editor", 28, 80);
 
 	struct editor_state editor;
 	init_editor(&editor);
@@ -13,12 +13,10 @@ int main(int argc, char** argv)
 		editor_open(&editor, argv[1]);
 	}
 
-	editor_set_status_message(&editor, "HELP: Ctrl+Q = quit, Ctrl+S = save, Ctrl+F = find");
+	editor_set_status_message(&editor, "HELP: Ctrl+Q: quit, Ctrl+S: save");
 
 	while (window_handle_event(&editor)) {
 		window_redraw(&editor);
-		// editor_refresh_screen(&editor);
-		// editor_process_keypress(&editor);
 	}
 	
 	window_destroy();
