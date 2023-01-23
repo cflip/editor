@@ -260,62 +260,6 @@ void editor_update_screen_size(struct editor_state *editor)
 	editor->screen_rows -= 2;
 }
 
-void editor_draw_rows(struct editor_state* editor, struct append_buffer* buffer)
-{
-	int y;
-	for (y = 0; y < editor->screen_rows; y++) {
-		int file_line = y + editor->line_offset;
-		if (file_line >= editor->num_lines) {
-			if (editor->num_lines == 0 && y == editor->screen_rows / 3) {
-				char welcome[80];
-				int welcome_length = snprintf(welcome, sizeof(welcome), "Welcome to cflip text editor");
-				
-				if (welcome_length > editor->screen_cols)
-					welcome_length = editor->screen_cols;
-
-				int padding = (editor->screen_cols - welcome_length) / 2;
-				if (padding) {
-					ab_append(buffer, "~", 1);
-					padding--;
-				}
-
-				while (padding--)
-					ab_append(buffer, " ", 1);
-
-				ab_append(buffer, welcome, welcome_length);
-			} else {
-				ab_append(buffer, "~", 1);
-			}
-		} else {
-			int length = editor->lines[file_line].render_size - editor->col_offset;
-
-			if (length < 0) length = 0;
-			if (length > editor->screen_cols) length = editor->screen_cols;
-
-			char* c = &editor->lines[file_line].render[editor->col_offset];
-			unsigned char* highlight = &editor->lines[file_line].highlight[editor->col_offset];
-			int current_colour = -1;
-			int j;
-
-			for (j = 0; j < length; j++) {
-				/*
-				 * TODO: Move colour handling stuff to the window.
-				int colour = editor_syntax_to_colour(highlight[j]);
-				if (colour != current_colour) {
-					current_colour = colour;
-					char colour_buffer[16];
-					int colour_buffer_length = snprintf(colour_buffer, sizeof(colour_buffer), "\x1b[%dm", colour);
-
-					ab_append(buffer, colour_buffer, colour_buffer_length);
-				}
-				*/
-				ab_append(buffer, &c[j], 1);
-			}
-		}
-		ab_append(buffer, "\n", 1);
-	}
-}
-
 void editor_draw_status_bar(struct editor_state* editor, struct append_buffer* buffer)
 {
 	char status[80], right_status[80];
