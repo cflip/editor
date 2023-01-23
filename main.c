@@ -4,7 +4,7 @@
 
 int main(int argc, char** argv)
 {
-	window_init("Text editor", 28, 80);
+	window_init("Glypher", 28, 80);
 
 	struct editor_state editor;
 	init_editor(&editor);

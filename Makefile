@@ -1,7 +1,7 @@
 CFLAGS=-std=c99 -g -Wall
 LFLAGS=-lSDL2 -lz
 
-OUT=editor
+OUT=glypher
 OBJS=main.o     \
      buffer.o   \
      editor.o   \
