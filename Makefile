@@ -31,3 +31,6 @@ clean:
 install:
 	mkdir -p $(DESTDIR)/bin/
 	cp $(OUT) $(DESTDIR)/bin/
+
+uninstall:
+	rm -f $(DESTDIR)/bin/$(OUT)
