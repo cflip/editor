@@ -260,7 +260,7 @@ void editor_update_screen_size(struct editor_state *editor)
 	editor->screen_rows -= 2;
 }
 
-void editor_draw_status_bar(struct editor_state* editor, struct append_buffer* buffer)
+void editor_draw_status_bar(struct editor_state* editor, struct textbuf *buffer)
 {
 	char status[80], right_status[80];
 	int length = snprintf(status, sizeof(status), "%.20s - %d lines %s", editor->filename ? editor->filename : "[New File]", editor->num_lines, editor->dirty ? "(modified)" : "");
@@ -269,24 +269,24 @@ void editor_draw_status_bar(struct editor_state* editor, struct append_buffer* b
 	if (length > editor->screen_cols)
 		length = editor->screen_cols;
 
-	ab_append(buffer, status, length);
+	textbuf_append(buffer, status, length);
 	
 	while (length < editor->screen_cols) {
 		if (editor->screen_cols - length == right_length) {
-			ab_append(buffer, right_status, right_length);
+			textbuf_append(buffer, right_status, right_length);
 			break;
 		} else {
-			ab_append(buffer, " ", 1);
+			textbuf_append(buffer, " ", 1);
 			length++;
 		}
 	}
-	ab_append(buffer, "\n", 1);
+	textbuf_append(buffer, "\n", 1);
 }
 
-void editor_draw_message_bar(struct editor_state* editor, struct append_buffer* buffer)
+void editor_draw_message_bar(struct editor_state* editor, struct textbuf *buffer)
 {
 	if (editor->mode == EDITOR_MODE_INSERT) {
-		ab_append(buffer, "--INSERT--", 10);
+		textbuf_append(buffer, "--INSERT--", 10);
 		return;
 	}
 
@@ -296,7 +296,7 @@ void editor_draw_message_bar(struct editor_state* editor, struct append_buffer* 
 		message_length = editor->screen_cols;
 
 	if (message_length && time(NULL) - editor->status_message_time < 5)
-		ab_append(buffer, editor->status_message, message_length);
+		textbuf_append(buffer, editor->status_message, message_length);
 }
 
 void editor_destroy(struct editor_state *editor)

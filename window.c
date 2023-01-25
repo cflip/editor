@@ -3,7 +3,7 @@
 #include <unistd.h>
 #include <SDL2/SDL.h>
 
-#include "buffer.h"
+#include "textbuf.h"
 #include "editor.h"
 #include "error.h"
 #include "font.h"
@@ -145,7 +145,7 @@ static void draw_editor(struct editor_state *editor)
 	}
 
 	/* Draw the statusline containing file information */
-	struct append_buffer statusbuf = ABUF_INIT;
+	struct textbuf statusbuf = textbuf_init();
 
 	editor_draw_status_bar(editor, &statusbuf);
 	editor_draw_message_bar(editor, &statusbuf);
@@ -154,7 +154,7 @@ static void draw_editor(struct editor_state *editor)
 	SDL_SetTextureColorMod(font_texture, 0xff, 0xff, 0xff);
 	draw_string(statusbuf.buffer, NULL, statusbuf.length, 0, line_y);
 
-	ab_free(&statusbuf);
+	textbuf_free(&statusbuf);
 }
 
 void window_redraw(struct editor_state *editor)

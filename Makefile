@@ -3,7 +3,6 @@ LFLAGS=-lSDL2 -lz
 
 OUT=glypher
 OBJS=main.o     \
-     buffer.o   \
      editor.o   \
      error.o    \
      file.o     \
@@ -11,6 +10,7 @@ OBJS=main.o     \
      input.o    \
      line.o     \
      syntax.o   \
+     textbuf.o  \
      window.o
 
 DESTDIR=/usr/local
