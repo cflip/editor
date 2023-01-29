@@ -25,8 +25,22 @@ void editor_process_keypress(struct editor_state *editor, SDL_Keysym *keysym)
 	}
 
 	switch (keysym->sym) {
-		case '\r':
-			editor_insert_newline(editor);
+		/* TODO: Reimplement page up/down on Shift+W/S. */
+		case SDLK_w:
+			editor_move_up(editor);
+			break;
+		case SDLK_s:
+			if (keysym->mod & KMOD_CTRL) {
+				editor_save(editor);
+				break;
+			}
+			editor_move_down(editor);
+			break;
+		case SDLK_a:
+			editor_move_left(editor);
+			break;
+		case SDLK_d:
+			editor_move_right(editor);
 			break;
 		case SDLK_q:
 			if (keysym->mod & KMOD_CTRL) {
@@ -37,34 +51,23 @@ void editor_process_keypress(struct editor_state *editor, SDL_Keysym *keysym)
 				}
 				exit(0);
 			}
-			break;
-		case SDLK_s:
-			if (keysym->mod & KMOD_CTRL)
-				editor_save(editor);
-			break;
-		case SDLK_0:
 			editor->cursor_x = 0;
 			break;
-		case SDLK_4:
-			if (keysym->mod & KMOD_SHIFT)
-				editor_move_end(editor);
+		case SDLK_e:
+			editor_move_end(editor);
 			break;
-		case SDLK_SLASH:
-			editor_find(editor);
-			break;
-		case SDLK_x:
-			editor_move_right(editor);
+		case SDLK_n:
 			editor_delete_char(editor);
 			break;
-		case SDLK_PAGEUP:
-		case SDLK_PAGEDOWN:
-			/* TODO: Reimplement page up & page down. */
+		case SDLK_m:
+			editor_move_right(editor);
+			editor_delete_char(editor);
 			break;
 		case SDLK_i:
 			editor->mode = EDITOR_MODE_INSERT;
 			editor->pressed_insert_key = 1;
 			break;
-		case SDLK_a:
+		case SDLK_l:
 			if (keysym->mod & KMOD_SHIFT)
 				editor_move_end(editor);
 			else
@@ -80,17 +83,8 @@ void editor_process_keypress(struct editor_state *editor, SDL_Keysym *keysym)
 			editor->mode = EDITOR_MODE_INSERT;
 			editor->pressed_insert_key = 1;
 			break;
-		case SDLK_k:
-			editor_move_up(editor);
-			break;
-		case SDLK_j:
-			editor_move_down(editor);
-			break;
-		case SDLK_h:
-			editor_move_left(editor);
-			break;
-		case SDLK_l:
-			editor_move_right(editor);
+		case SDLK_SLASH:
+			editor_find(editor);
 			break;
 	}
 
