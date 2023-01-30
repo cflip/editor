@@ -11,6 +11,14 @@
 #include "syntax.h"
 #include "window.h"
 
+/* How long a message stays on screen */
+#define MESSAGE_TIMEOUT_SECONDS 5
+
+/* How long the user has to press Ctrl+Q again to quit an unsaved file. */
+#define QUIT_TIMEOUT_SECONDS 5
+
+static int quit_message_time = 0;
+
 void init_editor(struct editor_state* editor)
 {
 	editor->cursor_x = 0;
@@ -48,6 +56,16 @@ char* editor_prompt(struct editor_state* editor, char* prompt, void (*callback)(
 	 */
 	printf("TODO: editor_prompt unimplemented\n");
 	return NULL;
+}
+
+void editor_try_quit(struct editor_state *editor)
+{
+	if (editor->dirty && quit_message_time == 0) {
+		editor_set_status_message(editor, "This file has unsaved changes. Press Ctrl+Q again to quit");
+		quit_message_time = time(NULL);
+		return;
+	}
+	exit(0);
 }
 
 void editor_move_left(struct editor_state *editor)
@@ -295,8 +313,11 @@ void editor_draw_message_bar(struct editor_state* editor, struct textbuf *buffer
 	if (message_length > editor->screen_cols)
 		message_length = editor->screen_cols;
 
-	if (message_length && time(NULL) - editor->status_message_time < 5)
+	if (message_length && time(NULL) - editor->status_message_time < MESSAGE_TIMEOUT_SECONDS)
 		textbuf_append(buffer, editor->status_message, message_length);
+
+	if (time(NULL) - quit_message_time > QUIT_TIMEOUT_SECONDS)
+		quit_message_time = 0;
 }
 
 void editor_destroy(struct editor_state *editor)

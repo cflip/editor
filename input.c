@@ -6,8 +6,6 @@
 
 void editor_process_keypress(struct editor_state *editor, SDL_Keysym *keysym)
 {
-	static int quit_message = 1;
-
 	/* Handle keypresses for typing modes separately. */
 	if (editor->mode != EDITOR_MODE_NORMAL) {
 		if (keysym->sym == SDLK_BACKSPACE)
@@ -44,12 +42,8 @@ void editor_process_keypress(struct editor_state *editor, SDL_Keysym *keysym)
 			break;
 		case SDLK_q:
 			if (keysym->mod & KMOD_CTRL) {
-				if (editor->dirty && quit_message) {
-					editor_set_status_message(editor, "This file has unsaved changes. Press Ctrl+Q again to quit");
-					quit_message = 0;
-					return;
-				}
-				exit(0);
+				editor_try_quit(editor);
+				break;
 			}
 			editor->cursor_x = 0;
 			break;
@@ -87,6 +81,4 @@ void editor_process_keypress(struct editor_state *editor, SDL_Keysym *keysym)
 			editor_find(editor);
 			break;
 	}
-
-	quit_message = 1;
 }

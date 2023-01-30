@@ -39,6 +39,7 @@ void init_editor(struct editor_state* editor);
 
 void editor_set_status_message(struct editor_state* editor, const char* format, ...);
 char* editor_prompt(struct editor_state* editor, char* prompt, void (*callback)(struct editor_state*, char*, int));
+void editor_try_quit(struct editor_state *editor);
 
 void editor_move_left(struct editor_state *);
 void editor_move_right(struct editor_state *);
