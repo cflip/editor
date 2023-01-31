@@ -17,6 +17,8 @@ struct textbuf {
 
 struct textbuf textbuf_init();
 void textbuf_append(struct textbuf *textbuf, const char *str, int len);
+void textbuf_delete(struct textbuf *textbuf);
+void textbuf_clear(struct textbuf *textbuf);
 void textbuf_free(struct textbuf *textbuf);
 
 #endif

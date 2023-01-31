@@ -26,6 +26,18 @@ void textbuf_append(struct textbuf *textbuf, const char *str, int len)
 	textbuf->length += len;
 }
 
+void textbuf_delete(struct textbuf *textbuf)
+{
+	textbuf->buffer[textbuf->length] = '\0';
+	textbuf->length--;
+}
+
+void textbuf_clear(struct textbuf *textbuf)
+{
+	textbuf_free(textbuf);
+	*textbuf = textbuf_init();
+}
+
 void textbuf_free(struct textbuf *textbuf)
 {
 	free(textbuf->buffer);
