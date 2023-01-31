@@ -52,17 +52,7 @@ int window_handle_event(struct editor_state *editor)
 		editor_process_keypress(editor, &e.key.keysym);
 		break;
 	case SDL_TEXTINPUT:
-		if (editor->mode == EDITOR_MODE_NORMAL)
-			break;
-		/*
-		 * Ignore the first letter after entering insert mode, because it
-		 * usually is just 'i'.
-		 */
-		if (editor->pressed_insert_key) {
-			editor->pressed_insert_key = 0;
-			break;
-		}
-		editor_insert_char(editor, *e.text.text);
+		input_process_textinput(editor, e.text.text);
 		break;
 	case SDL_WINDOWEVENT:
 		if (e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
@@ -164,9 +154,17 @@ void window_redraw(struct editor_state *editor)
 	editor_scroll(editor);
 	draw_editor(editor);
 
+	int cursor_x = (editor->cursor_display_x - editor->col_offset);
+	int cursor_y = (editor->cursor_y - editor->line_offset);
+
+	if (editor->mode == EDITOR_MODE_COMMAND) {
+		cursor_x = editor->cmdline.length;
+		cursor_y = editor->screen_rows + 1;
+	}
+
 	SDL_Rect cursor_rect;
-	cursor_rect.x = (editor->cursor_display_x - editor->col_offset) * font.width;
-	cursor_rect.y = (editor->cursor_y - editor->line_offset) * font.height;
+	cursor_rect.x = cursor_x * font.width;
+	cursor_rect.y = cursor_y * font.height;
 	cursor_rect.w = font.width;
 	cursor_rect.h = font.height;
 

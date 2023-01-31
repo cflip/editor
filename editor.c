@@ -34,6 +34,7 @@ void init_editor(struct editor_state* editor)
 	editor->status_message_time = 0;
 	editor->syntax = NULL;
 	editor->mode = EDITOR_MODE_NORMAL;
+	editor->cmdline = textbuf_init();
 
 	editor_update_screen_size(editor);
 	window_set_filename("[New]");
@@ -56,6 +57,13 @@ char* editor_prompt(struct editor_state* editor, char* prompt, void (*callback)(
 	 */
 	printf("TODO: editor_prompt unimplemented\n");
 	return NULL;
+}
+
+void editor_run_command(struct editor_state *editor)
+{
+	/* TODO: Do something here */
+	editor->mode = EDITOR_MODE_NORMAL;
+	textbuf_clear(&editor->cmdline);
 }
 
 void editor_try_quit(struct editor_state *editor)
@@ -308,6 +316,11 @@ void editor_draw_message_bar(struct editor_state* editor, struct textbuf *buffer
 		return;
 	}
 
+	if (editor->mode == EDITOR_MODE_COMMAND) {
+		textbuf_append(buffer, editor->cmdline.buffer, editor->cmdline.length);
+		return;
+	}
+
 	int message_length = strlen(editor->status_message);
 	
 	if (message_length > editor->screen_cols)
@@ -326,4 +339,5 @@ void editor_destroy(struct editor_state *editor)
 	for (int i = 0; i < editor->num_lines; i++)
 		free_line(&editor->lines[i]);
 	free(editor->lines);
+	textbuf_free(&editor->cmdline);
 }

@@ -4,10 +4,25 @@
 #include "file.h"
 #include "line.h"
 
+void input_process_textinput(struct editor_state *editor, const char *text)
+{
+	/* Ignore the first letter after entering insert mode. */
+	if (editor->pressed_insert_key) {
+		editor->pressed_insert_key = 0;
+		return;
+	}
+
+	if (editor->mode == EDITOR_MODE_INSERT) {
+		editor_insert_char(editor, *text);
+	} else if (editor->mode == EDITOR_MODE_COMMAND) {
+		textbuf_append(&editor->cmdline, text, 1);
+	}
+}
+
 void editor_process_keypress(struct editor_state *editor, SDL_Keysym *keysym)
 {
 	/* Handle keypresses for typing modes separately. */
-	if (editor->mode != EDITOR_MODE_NORMAL) {
+	if (editor->mode == EDITOR_MODE_INSERT) {
 		if (keysym->sym == SDLK_BACKSPACE)
 			editor_delete_char(editor);
 
@@ -16,6 +31,18 @@ void editor_process_keypress(struct editor_state *editor, SDL_Keysym *keysym)
 
 		if (keysym->sym == SDLK_TAB)
 			editor_insert_char(editor, '\t');
+
+		if (keysym->sym == SDLK_ESCAPE)
+			editor->mode = EDITOR_MODE_NORMAL;
+		return;
+	}
+
+	if (editor->mode == EDITOR_MODE_COMMAND) {
+		if (keysym->sym == SDLK_BACKSPACE)
+			textbuf_delete(&editor->cmdline);
+
+		if (keysym->sym == SDLK_RETURN)
+			editor_run_command(editor);
 
 		if (keysym->sym == SDLK_ESCAPE)
 			editor->mode = EDITOR_MODE_NORMAL;
@@ -79,6 +106,9 @@ void editor_process_keypress(struct editor_state *editor, SDL_Keysym *keysym)
 			break;
 		case SDLK_SLASH:
 			editor_find(editor);
+			break;
+		case SDLK_SEMICOLON:
+			editor->mode = EDITOR_MODE_COMMAND;
 			break;
 	}
 }
