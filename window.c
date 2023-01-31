@@ -157,7 +157,7 @@ void window_redraw(struct editor_state *editor)
 	int cursor_x = (editor->cursor_display_x - editor->col_offset);
 	int cursor_y = (editor->cursor_y - editor->line_offset);
 
-	if (editor->mode == EDITOR_MODE_COMMAND) {
+	if (editor->mode == EDITOR_MODE_PROMPT) {
 		cursor_x = editor->cmdline.length;
 		cursor_y = editor->screen_rows + 1;
 	}

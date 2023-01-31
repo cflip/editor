@@ -188,8 +188,8 @@ void editor_set_mode(struct editor_state *editor, enum editor_mode mode)
 	if (mode == last_mode)
 		return;
 
-	/* Clear the command line if we are leaving command mode. */
-	if (last_mode == EDITOR_MODE_COMMAND) {
+	/* Clear the command line if we are leaving prompt mode. */
+	if (last_mode == EDITOR_MODE_PROMPT) {
 		textbuf_clear(&editor->cmdline);
 	}
 
@@ -334,7 +334,7 @@ void editor_draw_message_bar(struct editor_state* editor, struct textbuf *buffer
 		return;
 	}
 
-	if (editor->mode == EDITOR_MODE_COMMAND) {
+	if (editor->mode == EDITOR_MODE_PROMPT) {
 		textbuf_append(buffer, editor->cmdline.buffer, editor->cmdline.length);
 		return;
 	}

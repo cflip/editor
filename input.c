@@ -14,7 +14,7 @@ void input_process_textinput(struct editor_state *editor, const char *text)
 
 	if (editor->mode == EDITOR_MODE_INSERT) {
 		editor_insert_char(editor, *text);
-	} else if (editor->mode == EDITOR_MODE_COMMAND) {
+	} else if (editor->mode == EDITOR_MODE_PROMPT) {
 		textbuf_append(&editor->cmdline, text, 1);
 	}
 }
@@ -37,7 +37,7 @@ void editor_process_keypress(struct editor_state *editor, SDL_Keysym *keysym)
 		return;
 	}
 
-	if (editor->mode == EDITOR_MODE_COMMAND) {
+	if (editor->mode == EDITOR_MODE_PROMPT) {
 		if (keysym->sym == SDLK_BACKSPACE)
 			textbuf_delete(&editor->cmdline);
 
@@ -106,7 +106,7 @@ void editor_process_keypress(struct editor_state *editor, SDL_Keysym *keysym)
 			break;
 		case SDLK_SEMICOLON:
 			if (keysym->mod & KMOD_SHIFT)
-				editor_set_mode(editor, EDITOR_MODE_COMMAND);
+				editor_set_mode(editor, EDITOR_MODE_PROMPT);
 			break;
 	}
 }

@@ -9,7 +9,7 @@
 enum editor_mode {
 	EDITOR_MODE_NORMAL,
 	EDITOR_MODE_INSERT,
-	EDITOR_MODE_COMMAND
+	EDITOR_MODE_PROMPT
 };
 
 struct editor_state {
