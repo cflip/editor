@@ -36,11 +36,14 @@ struct editor_state {
 	struct textbuf cmdline;
 };
 
+typedef void (*prompt_callback_t)(struct editor_state*, char*, size_t);
+
 void init_editor(struct editor_state* editor);
 
 void editor_set_status_message(struct editor_state* editor, const char* format, ...);
-char* editor_prompt(struct editor_state* editor, char* prompt, void (*callback)(struct editor_state*, char*, int));
+void editor_prompt(struct editor_state* editor, char* prompt, prompt_callback_t callback);
 void editor_run_command(struct editor_state *editor);
+void editor_try_save(struct editor_state *editor);
 void editor_try_quit(struct editor_state *editor);
 
 void editor_move_left(struct editor_state *);

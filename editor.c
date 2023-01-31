@@ -7,6 +7,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "file.h"
 #include "input.h"
 #include "syntax.h"
 #include "window.h"
@@ -49,20 +50,54 @@ void editor_set_status_message(struct editor_state* editor, const char* format, 
 	editor->status_message_time = time(NULL);
 }
 
-char* editor_prompt(struct editor_state* editor, char* prompt, void (*callback)(struct editor_state*, char*, int))
+static prompt_callback_t saved_prompt_callback;
+
+void editor_prompt(struct editor_state* editor, char* prompt, prompt_callback_t callback)
 {
-	/* TODO: The previous implementation of this function relied on reading
-	 * input from the terminal, but now that we get input through window events
-	 * it's no longer possible to sit in an infinite loop waiting for keys here.
-	 */
-	printf("TODO: editor_prompt unimplemented\n");
-	return NULL;
+	saved_prompt_callback = callback;
+	editor_set_mode(editor, EDITOR_MODE_PROMPT);
 }
 
 void editor_run_command(struct editor_state *editor)
 {
-	/* TODO: Do something here */
+	textbuf_append(&editor->cmdline, "\0", 1);
+
+	if (saved_prompt_callback) {
+		saved_prompt_callback(editor, editor->cmdline.buffer, editor->cmdline.length);
+	}
+
+	/* TODO: Parse and run a command by its name */
 	editor_set_mode(editor, EDITOR_MODE_NORMAL);
+}
+
+static void save_callback(struct editor_state *editor, char *filename, size_t namelen)
+{
+	if (filename == NULL)
+		return;
+
+	editor->filename = malloc(namelen);
+	memcpy(editor->filename, filename, namelen);
+
+	editor_select_syntax_highlight(editor);
+	window_set_filename(editor->filename);
+
+	editor_try_save(editor);
+}
+
+void editor_try_save(struct editor_state *editor)
+{
+	/*
+	 * If there is no filename, set a callback to change the filename and
+	 * come back here later once it is set.
+	 */
+	if (editor->filename == NULL) {
+		editor_prompt(editor, "Save as: ", save_callback);
+		return;
+	}
+
+	int saverr = file_save_current_file(editor);
+	if (saverr != 0)
+		editor_set_status_message(editor, "Failed to save file: %s", strerror(saverr));
 }
 
 void editor_try_quit(struct editor_state *editor)
@@ -191,6 +226,7 @@ void editor_set_mode(struct editor_state *editor, enum editor_mode mode)
 	/* Clear the command line if we are leaving prompt mode. */
 	if (last_mode == EDITOR_MODE_PROMPT) {
 		textbuf_clear(&editor->cmdline);
+		saved_prompt_callback = NULL;
 	}
 
 	/* Ignore the extra first letter if we are entering a typing mode. */
@@ -263,20 +299,7 @@ static void editor_find_callback(struct editor_state* editor, char* query, int k
 
 void editor_find(struct editor_state* editor)
 {
-	int saved_cursor_x = editor->cursor_x;
-	int saved_cursor_y = editor->cursor_y;
-	int saved_col_offset = editor->col_offset;
-	int saved_line_offset = editor->line_offset;	
-
-	char* query = editor_prompt(editor, "Search: %s (Use Esc/Arrows/Enter)", editor_find_callback);
-	if (query) {
-		free(query);
-	} else {
-		editor->cursor_x = saved_cursor_x;
-		editor->cursor_y = saved_cursor_y;
-		editor->col_offset = saved_col_offset;
-		editor->line_offset = saved_line_offset;
-	}
+	/* TODO: Unimplemented */
 }
 
 void editor_scroll(struct editor_state* editor)

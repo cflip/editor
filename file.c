@@ -10,6 +10,7 @@
 #include "error.h"
 #include "line.h"
 #include "syntax.h"
+#include "window.h"
 
 static char *lines_to_string(struct editor_state *editor, int *buffer_length)
 {
@@ -70,34 +71,35 @@ void editor_open(struct editor_state* editor, char* filename)
 	editor->dirty = 0;
 }
 
-void editor_save(struct editor_state* editor)
+int file_save_current_file(struct editor_state *editor)
 {
-	if (editor->filename == NULL) {
-		editor->filename = editor_prompt(editor, "Save as: %s", NULL);
-		
-		if (editor->filename == NULL)
-			return;
-
-		editor_select_syntax_highlight(editor);
-		window_set_filename(editor->filename);
-	}
+	/* Assume that the editor has already prompted the user for a name */
+	if (editor->filename == NULL)
+		return EINVAL;
 
 	int length;
 	char *buffer = lines_to_string(editor, &length);
 
 	int fd = open(editor->filename, O_RDWR | O_CREAT, 0644);
-	if (fd != -1) {
-		if (ftruncate(fd, length) != -1) {
-			if (write(fd, buffer, length) == length) {
-				close(fd);
-				free(buffer);
-				editor_set_status_message(editor, "%d bytes written to disk", length);
-				editor->dirty = 0;
-				return;
-			}
-		}
-		close(fd);
-	}
+	if (fd == -1)
+		goto fail;
+
+	if (ftruncate(fd, length) == -1)
+		goto fail;
+
+	if (write(fd, buffer, length) != length)
+		goto fail;
+
+	close(fd);
 	free(buffer);
-	editor_set_status_message(editor, "Failed to write to disk: %s", strerror(errno));
+	editor_set_status_message(editor, "%d bytes written to disk", length);
+	editor->dirty = 0;
+
+	return 0;
+
+fail:
+	int saved_errno = errno;
+	close(fd);
+	free(buffer);
+	return saved_errno;
 }

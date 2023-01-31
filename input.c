@@ -56,7 +56,7 @@ void editor_process_keypress(struct editor_state *editor, SDL_Keysym *keysym)
 			break;
 		case SDLK_s:
 			if (keysym->mod & KMOD_CTRL) {
-				editor_save(editor);
+				editor_try_save(editor);
 				break;
 			}
 			editor_move_down(editor);

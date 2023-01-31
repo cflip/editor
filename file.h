@@ -4,6 +4,6 @@
 #include "editor.h"
 
 void editor_open(struct editor_state* editor, char* filename);
-void editor_save(struct editor_state* editor);
+int file_save_current_file(struct editor_state *editor);
 
 #endif
