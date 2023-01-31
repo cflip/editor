@@ -33,7 +33,7 @@ void editor_process_keypress(struct editor_state *editor, SDL_Keysym *keysym)
 			editor_insert_char(editor, '\t');
 
 		if (keysym->sym == SDLK_ESCAPE)
-			editor->mode = EDITOR_MODE_NORMAL;
+			editor_set_mode(editor, EDITOR_MODE_NORMAL);
 		return;
 	}
 
@@ -45,7 +45,7 @@ void editor_process_keypress(struct editor_state *editor, SDL_Keysym *keysym)
 			editor_run_command(editor);
 
 		if (keysym->sym == SDLK_ESCAPE)
-			editor->mode = EDITOR_MODE_NORMAL;
+			editor_set_mode(editor, EDITOR_MODE_NORMAL);
 		return;
 	}
 
@@ -85,30 +85,28 @@ void editor_process_keypress(struct editor_state *editor, SDL_Keysym *keysym)
 			editor_delete_char(editor);
 			break;
 		case SDLK_i:
-			editor->mode = EDITOR_MODE_INSERT;
-			editor->pressed_insert_key = 1;
+			editor_set_mode(editor, EDITOR_MODE_INSERT);
 			break;
 		case SDLK_l:
 			if (keysym->mod & KMOD_SHIFT)
 				editor_move_end(editor);
 			else
 				editor_move_right(editor);
-			editor->mode = EDITOR_MODE_INSERT;
-			editor->pressed_insert_key = 1;
+			editor_set_mode(editor, EDITOR_MODE_INSERT);
 			break;
 		case SDLK_o:
 			if (keysym->mod & KMOD_SHIFT)
 				editor_add_line_above(editor);
 			else
 				editor_add_line_below(editor);
-			editor->mode = EDITOR_MODE_INSERT;
-			editor->pressed_insert_key = 1;
+			editor_set_mode(editor, EDITOR_MODE_INSERT);
 			break;
 		case SDLK_SLASH:
 			editor_find(editor);
 			break;
 		case SDLK_SEMICOLON:
-			editor->mode = EDITOR_MODE_COMMAND;
+			if (keysym->mod & KMOD_SHIFT)
+				editor_set_mode(editor, EDITOR_MODE_COMMAND);
 			break;
 	}
 }

@@ -55,6 +55,8 @@ void editor_delete_char(struct editor_state* editor);
 void editor_add_line_above(struct editor_state* editor);
 void editor_add_line_below(struct editor_state* editor);
 
+void editor_set_mode(struct editor_state *editor, enum editor_mode mode);
+
 void editor_find(struct editor_state* editor);
 void editor_scroll(struct editor_state* editor);
 void editor_update_screen_size(struct editor_state *);

@@ -62,8 +62,7 @@ char* editor_prompt(struct editor_state* editor, char* prompt, void (*callback)(
 void editor_run_command(struct editor_state *editor)
 {
 	/* TODO: Do something here */
-	editor->mode = EDITOR_MODE_NORMAL;
-	textbuf_clear(&editor->cmdline);
+	editor_set_mode(editor, EDITOR_MODE_NORMAL);
 }
 
 void editor_try_quit(struct editor_state *editor)
@@ -181,6 +180,25 @@ void editor_add_line_below(struct editor_state* editor)
 	editor_insert_line(editor, editor->cursor_y + 1, "", 0);
 	editor->cursor_y++;
 	editor->cursor_x = 0;
+}
+
+void editor_set_mode(struct editor_state *editor, enum editor_mode mode)
+{
+	enum editor_mode last_mode = editor->mode;
+	if (mode == last_mode)
+		return;
+
+	/* Clear the command line if we are leaving command mode. */
+	if (last_mode == EDITOR_MODE_COMMAND) {
+		textbuf_clear(&editor->cmdline);
+	}
+
+	/* Ignore the extra first letter if we are entering a typing mode. */
+	if (mode != EDITOR_MODE_NORMAL) {
+		editor->pressed_insert_key = 1;
+	}
+
+	editor->mode = mode;
 }
 
 static void editor_find_callback(struct editor_state* editor, char* query, int key)
